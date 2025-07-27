@@ -1,0 +1,88 @@
+﻿@page "/Register"
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-xl-6 mx-auto rounded border p-4" style="margin: 60px;">
+            <h3 class="text-center mb-3">Register</h3>
+            <hr />
+
+            @if (errors.Length > 0)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <ul>
+                        @foreach (var error in errors)
+                        {
+                            <li>@error</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Email</label>
+                <div class="col-md-8">
+                    <input class="form-control" @bind="registerDto.Email" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Password</label>
+                <div class="col-md-8">
+                    <input class="form-control" type="password" @bind="registerDto.Password" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-md-4 col-form-label">Confirm Password</label>
+                <div class="col-md-8">
+                    <input class="form-control" type="password" @bind="confirmPassword" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="offset-md-4 col d-grid">
+                    <button class="btn btn-primary" @onclick="RegisterAsync">Register</button>
+                </div>
+                <div class="col d-grid">
+                    <a class="btn btn-outline-primary" href="/" role="button">Cancel</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+@inject AuthenticationStateProvider provider
+@inject NavigationManager navManager
+@code {
+    private RegisterDto registerDto = new RegisterDto();
+    public string confirmPassword = "";
+    public string[] errors = [];
+
+
+    private async Task RegisterAsync()
+    {
+        errors = Array.Empty<string>();
+
+        if (registerDto.Password != confirmPassword)
+        {
+            errors = new[] { "Password and Confirm Password do not match!" };
+            return;
+        }
+
+        var authStateProvider = (CustomAuthStateProvider)provider;
+        var response = await authStateProvider.RegisterAsync(registerDto);
+
+        if (response.Succeeded)
+        {
+            navManager.NavigateTo("/");
+        }
+        else
+        {
+            errors = response.Errors;
+        }
+    }
+}
