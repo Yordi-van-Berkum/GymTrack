@@ -1,0 +1,50 @@
+﻿<div class="app-toast-container">
+    @foreach (var toast in toasts)
+    {
+        <div class="app-toast app-toast-@toast.Level.ToString().ToLower()">
+            @toast.Message
+        </div>
+    }
+</div>
+
+@code {
+    // Injecteren van de Service
+    [Inject] private ToastService ToastService { get; set; } = default!;
+
+    // Lijst met ontvangen tekst + het level van de toast (succes, warning etc)
+    private List<(string Message, ToastLevel Level)> toasts = new();
+
+    protected override void OnInitialized()
+    {
+        // Als de ToastService de OnShow afvuurt, wordt de ShowToast functie uitgevoerd.
+        ToastService.OnShow += ShowToast;
+    }
+
+    private void ShowToast(string message, ToastLevel level)
+    {
+        // Maakt een nieuwe toast aan met tekst en level
+        var toastItem = (message, level);
+        // Voegt de toast doe aan de lijst
+        toasts.Add(toastItem);
+        // Opnieuw renderen van de UI
+        StateHasChanged();
+
+        // Start een achtergrondtaak om de toast automatisch te verwijderen
+        _ = Task.Run(async () =>
+        {
+            // Wacht 3 seconden
+            await Task.Delay(3000);
+            // Verwijdert de toast uit de lijst
+            toasts.Remove(toastItem);
+            // Update de UI weer op de juiste threadik
+            await InvokeAsync(StateHasChanged);
+        });
+    }
+
+    // Dispose wordt uitgevoerd wanneer je van pagina wisselt.
+    public void Dispose()
+    {
+        // Zorgt ervoor dat ShowToast niet meer aangeroepen wordt door de Service.
+        ToastService.OnShow -= ShowToast;
+    }
+}

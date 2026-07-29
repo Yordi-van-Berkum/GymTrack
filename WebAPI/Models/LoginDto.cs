@@ -1,4 +1,4 @@
-﻿namespace Blazor.Models
+﻿namespace WebAPI.Models
 {
     public class LoginDto
     {

@@ -1,88 +1,124 @@
 ﻿@page "/Register"
+@using Blazor.Models.Auth
 
+<div class="page-container">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-title">Register</div>
 
+            <div class="auth-divider"></div>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-xl-6 mx-auto rounded border p-4" style="margin: 60px;">
-            <h3 class="text-center mb-3">Register</h3>
-            <hr />
+            <EditForm Model="registerDto" OnValidSubmit="RegisterAsync">
+                <DataAnnotationsValidator />
 
-            @if (errors.Length > 0)
-            {
-                <div class="alert alert-danger" role="alert">
-                    <ul>
-                        @foreach (var error in errors)
-                        {
-                            <li>@error</li>
-                        }
-                    </ul>
+                <div class="auth-form">
+                    <div class="auth-form-group">
+                        <label class="auth-label">User Name</label>
+                        <InputText class="auth-input" @bind-Value="registerDto.UserName" />
+                        <ValidationMessage class="auth-alert" For="@(() => registerDto.UserName)" />
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-label">First Name</label>
+                        <InputText class="auth-input" @bind-Value="registerDto.FirstName" />
+                        <ValidationMessage class="auth-alert" For="@(() => registerDto.FirstName)" />
+                     </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-label">Last Name</label>
+                        <InputText class="auth-input" @bind-Value="registerDto.LastName" />
+                        <ValidationMessage class="auth-alert" For="@(() => registerDto.LastName)" />
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-label">Date Of Birth</label>
+                        <InputDate class="auth-input" @bind-Value="registerDto.DateOfBirth" />
+                        <ValidationMessage class="auth-alert" For="@(() => registerDto.DateOfBirth)" />
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-label">Email</label>
+                        <InputText type="email" class="auth-input" @bind-Value="registerDto.Email" autocomplete="email" />
+                        <ValidationMessage class="auth-alert" For="@(() => registerDto.Email)" />
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-label">Length (cm)</label>
+                        <InputNumber class="auth-input" @bind-Value="registerDto.Height" />
+                        <ValidationMessage class="auth-alert" For="@(() => registerDto.Height)" />
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-label">Weight (kg)</label>
+                        <InputNumber class="auth-input" @bind-Value="registerDto.Weight" />
+                        <ValidationMessage class="auth-alert" For="@(() => registerDto.Weight)" />
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-label">Password</label>
+                        <InputText type="password" class="auth-input" @bind-Value="registerDto.Password" />
+                        <ValidationMessage class="auth-alert" For="@(() => registerDto.Password)" />
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-label">Repeat Password</label>
+                        <InputText type="password" class="auth-input" @bind-Value="registerDto.ConfirmPassword" />
+                        <ValidationMessage class="auth-alert" For="@(() => registerDto.ConfirmPassword)" />
+                    </div>
+
+                    <div class="auth-buttons">
+                        <button class="auth-btn" disabled="@isLoading">
+                                    @(isLoading ? "Loading..." : "Register")
+                                </button>
+                        <a class="auth-btn-cancel" href="/Login">Log In</a>
+                    </div>
                 </div>
-            }
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Email</label>
-                <div class="col-md-8">
-                    <input class="form-control" @bind="registerDto.Email" />
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Password</label>
-                <div class="col-md-8">
-                    <input class="form-control" type="password" @bind="registerDto.Password" />
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label class="col-md-4 col-form-label">Confirm Password</label>
-                <div class="col-md-8">
-                    <input class="form-control" type="password" @bind="confirmPassword" />
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="offset-md-4 col d-grid">
-                    <button class="btn btn-primary" @onclick="RegisterAsync">Register</button>
-                </div>
-                <div class="col d-grid">
-                    <a class="btn btn-outline-primary" href="/" role="button">Cancel</a>
-                </div>
-            </div>
-
+             </EditForm>
         </div>
     </div>
 </div>
 
-
-@inject AuthenticationStateProvider provider
-@inject NavigationManager navManager
 @code {
-    private RegisterDto registerDto = new RegisterDto();
-    public string confirmPassword = "";
-    public string[] errors = [];
+    // Model waarin alle registratiegegevens van de gebruiker worden opgeslagen
+    private RegisterDto registerDto = new();
+
+    // Injecteren van benodigheden van de pagina
+    [Inject] private CustomAuthStateProvider AuthenticationService { get; set; } = default!;
+    [Inject] ToastService ToastService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    private bool isLoading = false;
 
 
     private async Task RegisterAsync()
     {
-        errors = Array.Empty<string>();
-
-        if (registerDto.Password != confirmPassword)
-        {
-            errors = new[] { "Password and Confirm Password do not match!" };
+        // Voorkomt dat er meerdere registratieverzoeken tegelijk worden verstuurd.
+        if (isLoading)
             return;
-        }
 
-        var authStateProvider = (CustomAuthStateProvider)provider;
-        var response = await authStateProvider.RegisterAsync(registerDto);
+        try
+        {
+            // Zet de loadingstatus aan zodat de gebruiker niet opnieuw kan klikken.
+            isLoading = true;
 
-        if (response.Succeeded)
-        {
-            navManager.NavigateTo("/");
+            // Voert de regristratie uit via de authentication service.
+            var message = await AuthenticationService.RegisterAsync(registerDto);
+
+            // Geeft een toast message aan de gebruiker wanneer regristratie succesvol is.
+            ToastService.ShowToast(message, ToastLevel.Success);
+
+            // Navigeert naar de homepagina.
+            Navigation.NavigateTo("/Login");
         }
-        else
+        catch (Exception ex)
         {
-            errors = response.Errors;
+            // Toont de toast met de ontvangen foutmelding wanneer het regristreren niet gelukt is.
+            ToastService.ShowToast(ex.Message, ToastLevel.Error);
+        }
+        finally
+        {
+            // Zet de loadingstatus weer uit.
+            isLoading = false;
         }
     }
 }
