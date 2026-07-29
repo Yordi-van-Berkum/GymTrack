@@ -1,23 +1,37 @@
-﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+﻿@using Blazor.Pages
+@inherits LayoutComponentBase
 
+<div class="page">
     <main>
-        <div class="top-row px-4">
+        <div class="navbar">
+            <div class="navbar-left">
+                <span class="navbar-title">GymTrack</span>
+            </div>
+
+            <button class="menu-toggle" @onclick="ToggleMenu">
+                ☰
+            </button>
+
             <AuthorizeView>
                 <Authorized>
-                    <p class="my-3 me-3">Hello, @context.User.Identity?.Name!</p>
-                    <button class="btn btn-primary" @onclick="Logout">Logout</button>
+                    <nav class="nav-links @(mobileMenuOpen ? "show" : "")">
+                        <a @onclick='() => NavigateTo("/Planning")'>Planning</a>
+                        <a @onclick='() => NavigateTo("/Workouts")'>Workouts</a>
+                        <a @onclick='() => NavigateTo("/Musclegroups")'>Exercises</a>
+                        <button class="logout-btn" @onclick="Logout">Logout</button>
+                    </nav>
+
                 </Authorized>
                 <NotAuthorized>
-                    <a class="btn btn-primary" href="Login">Login</a>
-                    <a class="btn btn-outline-primary" href="Register">Register</a>
+                    <nav class="nav-links auth-links @(mobileMenuOpen ? "show" : "")">
+                        <a @onclick='() => NavigateTo("/Login")'>Login</a>
+                        <a @onclick='() => NavigateTo("/Register")'>Register</a>
+                    </nav>
                 </NotAuthorized>
             </AuthorizeView>
-
         </div>
+
+        <Toast />
 
         <article class="content px-4">
             @Body
@@ -25,13 +39,45 @@
     </main>
 </div>
 
-@inject AuthenticationStateProvider provider
-@inject NavigationManager navManager
 @code {
+    // Houdt bij of het mobiele menu open of dicht is.
+    private bool mobileMenuOpen = false;
+
+
+    // Injecteren van benodigheden van de pagina
+    [Inject] private CustomAuthStateProvider AuthenticationService { get; set; } = default!;
+    [Inject] ToastService ToastService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+
+    // Zorgt ervoor dat het mobiele menu open gaat.
+    private void ToggleMenu()
+    {
+        mobileMenuOpen = !mobileMenuOpen;
+    }
+
+    // Zorgt ervoor dat als je navigeert het mobiele menu weer dicht klapt.
+    private void NavigateTo(string url)
+    {
+        // Sluit het mobiele menu.
+        mobileMenuOpen = false;
+
+        // Navigeert naar de gekozen pagina.
+        Navigation.NavigateTo(url);
+    }
+
     private void Logout()
-    { 
-        var authStateProvider = (CustomAuthStateProvider)provider;
-        authStateProvider.Logout();
-        navManager.NavigateTo("/");
+    {
+        // Sluit het mobiele menu.
+        mobileMenuOpen = false;
+
+        // Logt de gebruiker uit via de authentication service.
+        AuthenticationService.Logout();
+
+        // Geeft een succesmelding aan de gebruiker.
+        ToastService.ShowToast("Logged out successfully!", ToastLevel.Success);
+
+        // Navigeert terug naar de homepagina.
+        Navigation.NavigateTo("/");
     }
 }

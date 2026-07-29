@@ -1,58 +1,85 @@
 ﻿@page "/Login"
+@using Blazor.Models.Auth
 
-<div class="mx-auto rounded bder p-4" style="width: 400px; margin: 60px;">
-    <h3 class="text-center mb-3">Login</h3>
-    <hr />
 
-    @if (error.Length > 0)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>@error</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
+<div class="page-container">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-title">Log In</div>
 
-    <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input class="form-control" @bind="@loginDto.Email" />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Password</label>
-        <input class="form-control" type="password" @bind="loginDto.Password" />
-    </div>
+            <div class="register-divider"></div>
 
-    <div class="row">
-        <div class="col d-grid">
-            <button class="btn btn-primary" @onclick="LoginAsync">Log in</button>
-        </div>
-        <div class="col d-grid">
-            <a class="btn btn-outline-primary" href="/" role="button">
-                Cancel
-            </a>
-        </div>
-    </div>
+            <EditForm Model="loginDto" OnValidSubmit="LoginAsync">
+                <DataAnnotationsValidator />
 
+                <div class="auth-form">
+                    <div class="auth-form-group">
+                        <label class="auth-label">Email</label>
+                        <InputText class="auth-input" @bind-Value="loginDto.Email" autocomplete="email" />
+                        <ValidationMessage class="auth-alert" For="@(() => loginDto.Email)" />
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-label">Password</label>
+                        <InputText type="password" class="auth-input" @bind-Value="loginDto.Password" />
+                        <ValidationMessage class="auth-alert" For="@(() => loginDto.Password)" />
+                    </div>
+
+                    <div class="auth-buttons">
+                        <button class="auth-btn" disabled="@isLoading">
+                            @(isLoading ? "Loading..." : "Log In")
+                        </button>
+                        <a class="auth-btn-cancel" href="/Register">Register</a>
+                    </div>
+                </div>
+            </EditForm>
+         </div>
+     </div>
 </div>
 
-@inject AuthenticationStateProvider provider
-@inject NavigationManager navManager
 @code {
+    // Model waarin de login gegevens van de gebruiker worden opgeslagen.
     private LoginDto loginDto = new();
-    public string error = "";
+
+    // Voorkomt dat de gebruiker meerdere login requests tegelijk verstuurd.
+    private bool isLoading = false;
+
+    // Injecteren van benodigheden van de pagina
+    [Inject] private CustomAuthStateProvider AuthenticationService { get; set; } = default!;
+    [Inject] ToastService ToastService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+
 
     private async Task LoginAsync()
     {
-        var authStateProvider = (CustomAuthStateProvider) provider;
-        var formResult = await authStateProvider.LoginAsync(loginDto.Email, loginDto.Password);
-        // Wanneer formResult succesvol is stuurt hij je naar de start pagina
-        if (formResult.Succeeded)
+        // Voorkomt dat er meerdere loginverzoeken tegelijk worden verstuurd.
+        if (isLoading)
+            return;
+
+        try
         {
-            navManager.NavigateTo("/");
-        } 
-        // Wanneer formResult niet succesvol is vult hij error met de error die je ontvangt vanuit formResult
-        else
+            // Zet de loadingstatus aan zodat de gebruiker niet opnieuw kan klikken.
+            isLoading = true;
+
+            // Voert de login uit via de authentication service.
+            await AuthenticationService.LoginAsync(loginDto);
+
+            // Geeft een toast message aan de gebruiker wanneer login succesvol is.
+            ToastService.ShowToast("Login successful!", ToastLevel.Success);
+
+            // Navigeert naar de homepagina.
+            Navigation.NavigateTo("/");
+        }
+        catch (Exception ex)
         {
-            error = formResult.Errors[0];
+            // Toont de toast met de ontvangen foutmelding wanneer het inloggen niet gelukt is.
+            ToastService.ShowToast(ex.Message,ToastLevel.Error);
+        }
+        finally
+        {
+            // Zet de loadingstatus weer uit.
+            isLoading = false;
         }
     }
 }

@@ -1,11 +1,9 @@
-﻿using Blazor.Models;
+﻿using Blazor.Models.Auth;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.Win32.SafeHandles;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
-using System.Text.Json.Nodes;
 
 namespace Blazor.Services
 {
@@ -13,136 +11,130 @@ namespace Blazor.Services
     {
         private readonly HttpClient httpClient;
         private readonly ISyncLocalStorageService localStorage;
+        private readonly SafeApiHelper _safeApiHelper;
 
-        public CustomAuthStateProvider(HttpClient httpClient, ISyncLocalStorageService localStorage)
+        public CustomAuthStateProvider(HttpClient httpClient, ISyncLocalStorageService localStorage, SafeApiHelper safeApiHelper)
         {
             this.httpClient = httpClient;
             this.localStorage = localStorage;
+            _safeApiHelper = safeApiHelper;
 
+            // Haalt de opgeslagen JWT access token op uit de browser LocalStorage.
+            // Deze token blijft bestaan wanneer de gebruiker de pagina vernieuwt
             var accesToken = localStorage.GetItem<string>("accessToken");
+
+            // Controleert of er een token aanwezig is.
             if (accesToken != null)
             {
+                // Zet automatisch de Authorization header op alle toekomstige API requests.
+                // Hierdoor weet de backend bij beveiligde endpoints wie de gebruiker is.
                 this.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accesToken);
             }
         }
-        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+
+        public async Task<string> RegisterAsync(RegisterDto registerDto)
         {
-            var user = new ClaimsPrincipal(new ClaimsIdentity());
-            try
-            {
-                var response = await httpClient.GetAsync("auth/getuser");
-                if (response.IsSuccessStatusCode)
-                {
-                    var strResponse = await response.Content.ReadAsStringAsync();
-                    var jsonResponse = JsonNode.Parse(strResponse);
-                    var email = jsonResponse!["email"]!.ToString();
-
-                    var claims = new List<Claim>
-                    {
-                        new(ClaimTypes.Name, email),
-                        new(ClaimTypes.Email, email),
-                    };
-
-                    if (jsonResponse["roles"] is JsonArray roles)
-                    {
-                        foreach (var role in roles)
-                        {
-                            claims.Add(new Claim(ClaimTypes.Role, role!.ToString()));
-                        }
-                    }
-
-                    var identity = new ClaimsIdentity(claims, "Token");
-                    user = new ClaimsPrincipal(identity);
-                    return new AuthenticationState(user);
-                }
-             }
-            catch(Exception ex)
-            {
-
-            }
-
-            return new AuthenticationState(user);
+            // Stuurt de regristratiegegevens op naar de backend via de AuthController.
+            // SafeActionApiCallAsync voert de HTTP-aanroep veilig uit. Deze functie staat in de SafeApiHelper.cs in de Services map.
+            return await _safeApiHelper.SafeActionApiCallAsync(() => httpClient.PostAsJsonAsync("api/auth/register", registerDto));
         }
 
-        public async Task<FormResult> LoginAsync(string email, string password)
+        public async Task LoginAsync(LoginDto loginDto)
         {
-            try
-            {
-                var response = await httpClient.PostAsJsonAsync("login", new { email, password });
-                if (response.IsSuccessStatusCode)
-                {
-                    var strResponse = await response.Content.ReadAsStringAsync();
-                    var jsonResponse = JsonNode.Parse(strResponse);
-                    var accessToken = jsonResponse?["accessToken"]?.ToString();
-                    var refreshToken = jsonResponse?["refreshToken"]?.ToString();
+            //Stuurt de logingegevens op naar de backend via de AuthController.
+            //SafeDataApiCallAsync voert de HTTP-aanroep veilig uit. Deze functie staat in de SafeApiHelper.cs in de Services map.
+            var result = await _safeApiHelper.SafeDataApiCallAsync<LoginResponseDto>(() => httpClient.PostAsJsonAsync("api/auth/login", loginDto));
 
-                    localStorage.SetItem("accessToken", accessToken);
-                    localStorage.SetItem("refreshToken", refreshToken);
+            // Slaat tokens lokaal op zodat de gebruiker ingelogd blijft.
+            localStorage.SetItem("accessToken", result.AccessToken);
+            localStorage.SetItem("refreshToken", result.RefreshToken);
 
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-                    NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
-                    return new FormResult { Succeeded = true };
-                }
-                else
-                {
-                    return new FormResult { Succeeded = false, Errors = ["Bad Email or password"] };
-                }
-            }
-            catch { }
-            return new FormResult { Succeeded = false, Errors = ["Connection Error"] };
+            // Zorgt ervoor dat volgende API requests automatisch de JWT token gebruiken.
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+
+            // Laat Blazor weten dat de gebruiker nu ingelogd is.
+            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
 
         public void Logout()
         {
+            // Verwijdert de access token uit de lokale opslag.
+            // Deze token wordt gebruikt om de gebruiker bij de API te authenticeren.
             localStorage.RemoveItem("accessToken");
-            localStorage.RemoveItem("refreshtoken");
+
+
+            // Verwijdert de refresh token uit de lokale opslag.
+            // Hierdoor kan de gebruiker geen nieuwe access token meer aanvragen.
+            localStorage.RemoveItem("refreshToken");
+
+            // Verwijdert de JWT token uit de standaard headers van HttpClient.
+            // Nieuwe API requests worden hierdoor niet meer als ingelogde gebruiker verstuurd.
             httpClient.DefaultRequestHeaders.Authorization = null;
+
+            // Laat Blazor weten dat de gebruiker uitgelogd is.
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
 
-        public async Task<FormResult> RegisterAsync(RegisterDto registerDto)
+        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
+            // Standaard gebruiker zonder identiteit.
+            // Wanneer er geen geldige token is blijft de gebruiker anoniem.
+            var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
+
+
+            var accessToken = localStorage.GetItem<string>("accessToken");
+
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                return new AuthenticationState(anonymousUser);
+            }
+
             try
             {
-                var response = await httpClient.PostAsJsonAsync("auth/register", registerDto);
-                if(response.IsSuccessStatusCode)
+                // Haalt de ingelogde gebruiker op via de backend.
+                // De JWT token wordt automatisch meegestuurd via de Authorization header.
+                var response = await httpClient.GetAsync("api/auth/getuser");
+
+                // Wanneer de gebruiker niet ingelogd is of de token ongeldig is, blijft de gebruiker anoniem.
+                if (!response.IsSuccessStatusCode)
                 {
-                    var loginResponse = await LoginAsync(registerDto.Email, registerDto.Password);
-                    return loginResponse;
+                    return new AuthenticationState(anonymousUser);
                 }
 
-                // Errors voor het registeren
-                var strResponse = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(strResponse);
-                var jsonResponse = JsonNode.Parse(strResponse);
-                var errorsObject = jsonResponse!["errors"]!.AsObject();
-                var errorsList = new List<string>();
-                foreach (var error in errorsObject)
+                // Leest de gebruiker response vanuit de backend.
+                var userResponse = await response.Content.ReadFromJsonAsync<UserResponseDto>();
+
+                // Controleert of de backend daadwerkelijk een gebruiker heeft teruggestuurd.
+                if (userResponse == null)
                 {
-                    errorsList.Add(error.Value![0]!.ToString());
+                    return new AuthenticationState(anonymousUser);
                 }
 
-                var formResult = new FormResult
+                // Maakt de claims aan die Blazor gebruikt om te weten wie ingelogd is.
+                var claims = new List<Claim>
                 {
-                    Succeeded = false,
-                    Errors = errorsList.ToArray()
+                    // Slaat het id op van de gebruiker op.
+                    new Claim(ClaimTypes.NameIdentifier, userResponse.UserId),
+
+                    // Slaat het emailadres op als naam en email claim.
+                    new Claim(ClaimTypes.Name, userResponse.Email),
+                    new Claim(ClaimTypes.Email, userResponse.Email)
                 };
 
-                return formResult;
+                // Maakt een identity op basis van de ontvangen claims.
+                var identity = new ClaimsIdentity(claims, "Token");
+
+                // Maakt een ingelogde gebruiker aan.
+                var user = new ClaimsPrincipal(identity);
+
+                // Geeft de huidige authentication state terug.
+                return new AuthenticationState(user);
             }
-            catch { }
-
-            return new FormResult { Succeeded = false, Errors = ["Connection Error"] };
+            catch (HttpRequestException)
+            {
+                // Wanneer de API niet bereikbaar is blijft de gebruiker anoniem.
+                return new AuthenticationState(anonymousUser);
+            }
         }
-
-
-
-
-    }
-
-    public class FormResult
-    {
-        public bool Succeeded { get; set; }
-        public string[] Errors { get; set; } = [];
     }
 }
