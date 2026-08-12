@@ -25,7 +25,7 @@
         <div class="musclegroup-container">
             @foreach (var muscle in FilteredMuscleGroups)
             {
-                <div class="musclegroup-card">
+                <div class="musclegroup-card" @onclick="@(() => NavigateToExercises(muscle.Id))">
                     <div class="musclegroup-image-wrapper">
                         <img src="@($"/Images/Musclegroups/{muscle.ImageUrl}")"alt="@muscle.Name"class="musclegroup-image" />
                     </div>
@@ -35,8 +35,8 @@
                     </div>
 
                     <div class="musclegroup-count">
-                        <span>0</span>
-                        exercises
+                        <span>@muscle.ExerciseCount</span>
+                        Exercises
                     </div>
                 </div>
             }
@@ -58,7 +58,7 @@
     // Lijst met alle spiergroepen
     private List<MuscleGroup> muscleGroups = new();
 
-     // Boolean om pagina in te laden wanneer alles opgehaald is wordt die false en toont die de pagina
+    // Boolean om pagina in te laden wanneer alles opgehaald is wordt die false en toont die de pagina
     private bool isLoading;
 
     // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
@@ -95,6 +95,12 @@
     private async Task LoadMuscleGroupsAsync(CancellationToken cancellationToken)
     {
         muscleGroups = await ExercisesService.GetMuscleGroupsAsync(cancellationToken);
+    }
+
+    // Navigeer naar de oefeningen van een bepaalde spiergroep.
+    private void NavigateToExercises(int muscleGroupId)
+    {
+        Navigation.NavigateTo($"/Exercises/{muscleGroupId}");
     }
 
 

@@ -26,7 +26,7 @@ namespace WebAPI.Controllers
             return Ok(muscleGroups);
         }
 
-        [HttpGet("getexercisesbymusclegroupid/{muscleGroupId:int}")]
+        [HttpGet("getexercisesbymusclegroupid/{muscleGroupId:int:min(1)}")]
         public async Task<IActionResult> GetExercisesByMuscleGroupId(int muscleGroupId, CancellationToken cancellationToken)
         {
             // Haalt de oefeningen op die bij de opgegeven spiergroep horen.
@@ -34,6 +34,16 @@ namespace WebAPI.Controllers
 
             // Return Ok met de lijst met oefeningen
             return Ok(exercises);
+        }
+
+        [HttpGet("getexercise/{exerciseId:int}")]
+        public async Task<IActionResult> GetExerciseById(int exerciseId, CancellationToken cancellationToken)
+        {
+            // Haalt de informatie op van een bepaalde oefening.
+            var exercise = await _exercisesService.GetExerciseByIdAsync(exerciseId, cancellationToken);
+
+            // Return Ok met de oefening
+            return Ok(exercise);
         }
     }
 }

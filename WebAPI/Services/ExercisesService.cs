@@ -43,5 +43,20 @@ namespace WebAPI.Services
                 .ToListAsync(cancellationToken);
         }
 
+        // Haalt de oefening op met het meegestuurde id.
+        public async Task<ExerciseDto?> GetExerciseByIdAsync(int exerciseId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Exercises.AsNoTracking()
+                .Where(e => e.Id == exerciseId)
+                .Select(e => new ExerciseDto
+                {
+                    Id = e.Id,
+                    Name = e.Name,
+                    Description = e.Description,
+                    ImageUrl = e.ImageUrl
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
     }
 }

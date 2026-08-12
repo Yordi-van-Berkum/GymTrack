@@ -1,0 +1,122 @@
+﻿@page "/Exercises/{MuscleGroupId:int}"
+
+<div class="page-container">
+    <div class="pagetitle-back">
+        <BackButton />
+        <div class="pagetitle">Exercises</div>
+    </div>
+
+    <div class="search">
+        <i class="fa fa-search search-icon"></i>
+        <input type="text" class="search-input" placeholder="Search..." @bind="searchTerm" @bind:event="oninput" />
+    </div>
+
+    @if (isLoading)
+    {
+        <p>Loading exercises...</p>
+    }
+    else if (!FilteredExercises.Any())
+    {
+        <p>No exercises found!</p>
+    }
+    else
+    {
+        <div class="exercise-container">
+            @foreach (var exercise in FilteredExercises)
+            {
+                <div class="exercise-card" @onclick="() => ExerciseDetail(exercise.Id)">
+                    <div class="exercise-image-wrapper">
+                        <img src="@($"/Images/Exercises/{exercise.ImageUrl}")"
+                             alt="@exercise.Name"
+                             class="exercise-image" />
+                    </div>
+
+                    <div class="exercise-name">
+                        @exercise.Name
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+
+
+@code {
+    // Hier wordt er opgeslagen wat je typt in de zoekbalk als string
+    private string searchTerm = "";
+
+
+    // Meegestuurde id vanuit de spiergroepen pagina
+    [Parameter] public int MuscleGroupId { get; set; }
+
+    // Lijst met oefenignen
+    private List<Exercise> exercises = new();
+
+    // Injecteren van benodigheden van de pagina
+    [Inject] private ExercisesService ExercisesService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    // Boolean om pagina in te laden wanneer alles opgehaald is wordt die false en toont die de pagina
+    private bool isLoading;
+
+    // Aanroepen van de LoadAllDataAsync functie bij het inladen van de pagina.
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllDataAsync();
+    }
+
+    // Zorgt ervoor dat de pagina pas inlaad wanneer alle functie zijn aangeroepen.
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            await Task.WhenAll(
+                LoadExercisesAsync(_cancellationTokenSource.Token)
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd omdat de pagina is verlaten.
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // Ophalen van alle oefeningen van een bepaalde spiergroep.
+    private async Task LoadExercisesAsync(CancellationToken cancellationToken)
+    {
+        exercises = await ExercisesService.GetExercisesByMuscleGroupIdAsync(MuscleGroupId, cancellationToken);
+    }
+
+
+    // Navigeren naar de detail pagina van de oefening.
+    private void ExerciseDetail(int exerciseId)
+    {
+        Navigation.NavigateTo($"/ExerciseDetail/{exerciseId}");
+    }
+
+    // Annuleert lopende requests wanneer de component wordt verwijderd.
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+
+    // Filter de lijst met oefeningen.
+    private IEnumerable<Exercise> FilteredExercises =>
+        exercises.Where(x =>
+            // Als er niks in de zoekbalk is ingevuld stuur alle oefeningen terug.
+            string.IsNullOrWhiteSpace(searchTerm) ||
+            // Als de zoekbalk wel is ingevuld filter de oefeningen met wat vergeleken is.
+            x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+        );
+}
