@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebAPI.Services;
 
@@ -11,9 +12,11 @@ using WebAPI.Services;
 namespace WebAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260811204102_MuscleGrouos")]
+    partial class MuscleGrouos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -237,45 +240,6 @@ namespace WebAPI.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("WebAPI.Models.Exercises.Exercise", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Exercises");
-                });
-
-            modelBuilder.Entity("WebAPI.Models.Exercises.ExerciseMuscleGroup", b =>
-                {
-                    b.Property<int>("ExerciseId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MuscleGroupId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ExerciseId", "MuscleGroupId");
-
-                    b.HasIndex("MuscleGroupId");
-
-                    b.ToTable("ExerciseMuscleGroups");
-                });
-
             modelBuilder.Entity("WebAPI.Models.Exercises.MuscleGroup", b =>
                 {
                     b.Property<int>("Id")
@@ -348,35 +312,6 @@ namespace WebAPI.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("WebAPI.Models.Exercises.ExerciseMuscleGroup", b =>
-                {
-                    b.HasOne("WebAPI.Models.Exercises.Exercise", "Exercise")
-                        .WithMany("ExerciseMuscleGroups")
-                        .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("WebAPI.Models.Exercises.MuscleGroup", "MuscleGroup")
-                        .WithMany("ExerciseMuscleGroups")
-                        .HasForeignKey("MuscleGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Exercise");
-
-                    b.Navigation("MuscleGroup");
-                });
-
-            modelBuilder.Entity("WebAPI.Models.Exercises.Exercise", b =>
-                {
-                    b.Navigation("ExerciseMuscleGroups");
-                });
-
-            modelBuilder.Entity("WebAPI.Models.Exercises.MuscleGroup", b =>
-                {
-                    b.Navigation("ExerciseMuscleGroups");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,0 +1,15 @@
+body {
+    font-family: 'Inter', 'Helvetica Neue', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #020617;
+    color: #e2e8f0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.page-container {
+    padding: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+}

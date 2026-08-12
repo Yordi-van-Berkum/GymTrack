@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using WebAPI.Models;
+using WebAPI.Models.Auth;
 using WebAPI.Services;
 
 
@@ -95,6 +95,7 @@ builder.Services.AddAuthorization();
 
 // Registreert eigen applicatieservices.
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IExercisesService, ExercisesService>();
 
 
 // Registreert controllers.

@@ -16,6 +16,7 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddScoped<ToastService>();
+builder.Services.AddScoped<ExercisesService>();
 builder.Services.AddScoped<CustomAuthStateProvider>();
 builder.Services.AddScoped<SafeApiHelper>();
 

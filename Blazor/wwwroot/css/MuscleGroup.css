@@ -1,0 +1,98 @@
+﻿.musclegroup-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 18px;
+    width: 100%;
+    margin-top: 24px;
+}
+
+.musclegroup-card {
+    min-height: 230px;
+    padding: 24px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: #020617;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+    .musclegroup-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(122, 123, 255, 0.5);
+        box-shadow: 0 8px 25px rgba(122, 123, 255, 0.35);
+    }
+
+.musclegroup-image-wrapper {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.musclegroup-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    transition: transform 0.2s ease;
+}
+
+.musclegroup-card:hover .musclegroup-image {
+    transform: scale(1.05);
+}
+
+.musclegroup-name {
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.musclegroup-count {
+    margin-top: 6px;
+    color: #8b98ad;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+    .musclegroup-count span {
+        color: #e2e8f0;
+        font-weight: 700;
+    }
+
+@media (max-width: 700px) {
+
+    .musclegroup-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .musclegroup-card {
+        min-height: 220px;
+        padding: 24px 18px;
+    }
+
+    .musclegroup-image-wrapper {
+        width: 130px;
+        height: 130px;
+        margin-bottom: 16px;
+    }
+
+    .musclegroup-name {
+        font-size: 18px;
+    }
+
+    .musclegroup-count {
+        font-size: 14px;
+    }
+}

@@ -1,0 +1,94 @@
+﻿@page "/ExerciseDetail/{ExerciseId:int}"
+
+<div class="page-container">
+    @if (isLoading)
+    {
+        <p>Loading exercise...</p>
+    }
+    else if (exercise is null)
+    {
+        <p>Exercise not found.</p>
+    }
+    else
+    {
+        <div class="pagetitle-back">
+            <BackButton />
+            <div class="pagetitle">@exercise.Name</div>
+        </div>
+
+        <div class="exercise-detail-card">
+            <img class="exercise-detail-image"
+                 src="@($"/images/exercises/{exercise.ImageUrl}")"
+                 alt="@exercise.Name" />
+
+            <div class="exercise-detail-content">
+                <h2 class="exercise-detail-name">
+                    @exercise.Name
+                </h2>
+
+                <p class="exercise-detail-description">
+                    @exercise.Description
+                </p>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    // Meegestuurde id van de oefening
+    [Parameter] public int ExerciseId { get; set; }
+
+    // Injecteren van benodigheden van de pagina
+    [Inject] private ExercisesService ExercisesService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    // Opgehaalde oefening
+    private Exercise? exercise;
+
+    // Boolean om pagina in te laden wanneer alles opgehaald is wordt die false en toont die de pagina
+    private bool isLoading;
+
+    // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    // Aanroepen van de LoadAllDataAsync functie bij het inladen van de pagina.
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllDataAsync();
+    }
+
+    // Zorgt ervoor dat de pagina pas inlaad wanneer alle functie zijn aangeroepen.
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            await Task.WhenAll(
+                LoadExerciseDetailAsync(_cancellationTokenSource.Token)
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd omdat de pagina is verlaten.
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // Ophalen van de oefening
+    private async Task LoadExerciseDetailAsync(CancellationToken cancellationToken)
+    {
+        exercise = await ExercisesService.GetExerciseByIdAsync(ExerciseId, cancellationToken);
+    }
+
+    // Annuleert lopende requests wanneer de component wordt verwijderd.
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+
+}
