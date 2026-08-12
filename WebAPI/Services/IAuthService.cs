@@ -1,4 +1,4 @@
-﻿using WebAPI.Models;
+﻿using WebAPI.Models.Auth;
 
 namespace WebAPI.Services
 {

@@ -1,0 +1,118 @@
+﻿@page "/MuscleGroups"
+@implements IDisposable
+
+<div class="page-container">
+    <div class="pagetitle-back">
+        <BackButton />
+        <div class="pagetitle">Muscle Groups</div>
+    </div>
+
+    <div class="search">
+        <i class="fa fa-search search-icon fa-fw"></i>
+        <input type="text" class="search-input" placeholder="Search..." @bind="searchTerm" @bind:event="oninput" />
+    </div>
+
+    @if (isLoading)
+    {
+        <p>Loading muscle groups...</p>
+    }
+    else if (!FilteredMuscleGroups.Any())
+    {
+        <p>No muscle groups found!</p>
+    }
+    else
+    {
+        <div class="musclegroup-container">
+            @foreach (var muscle in FilteredMuscleGroups)
+            {
+                <div class="musclegroup-card">
+                    <div class="musclegroup-image-wrapper">
+                        <img src="@($"/Images/Musclegroups/{muscle.ImageUrl}")"alt="@muscle.Name"class="musclegroup-image" />
+                    </div>
+
+                    <div class="musclegroup-name">
+                        @muscle.Name
+                    </div>
+
+                    <div class="musclegroup-count">
+                        <span>0</span>
+                        exercises
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+
+
+@code {
+    // Hier wordt er opgeslagen wat je typt in de zoekbalk als string
+    private string searchTerm = "";
+
+    // Injecteren van benodigheden van de pagina
+    [Inject] private ExercisesService ExercisesService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    // Lijst met alle spiergroepen
+    private List<MuscleGroup> muscleGroups = new();
+
+     // Boolean om pagina in te laden wanneer alles opgehaald is wordt die false en toont die de pagina
+    private bool isLoading;
+
+    // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    // Aanroepen van de LoadAllDataAsync functie bij het inladen van de pagina.
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllDataAsync();
+    }
+
+    // Zorgt ervoor dat de pagina pas inlaad wanneer alle functie zijn aangeroepen.
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            await Task.WhenAll(
+                LoadMuscleGroupsAsync(_cancellationTokenSource.Token)
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd omdat de pagina is verlaten.
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // Ophalen van alle spiergroepen
+    private async Task LoadMuscleGroupsAsync(CancellationToken cancellationToken)
+    {
+        muscleGroups = await ExercisesService.GetMuscleGroupsAsync(cancellationToken);
+    }
+
+
+    // Annuleert lopende requests wanneer de component wordt verwijderd.
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+
+    // Filter de lijst met spiergroepen.
+    private IEnumerable<MuscleGroup> FilteredMuscleGroups =>
+        muscleGroups.Where(x =>
+            // Als er niks in de zoekbalk is ingevuld stuur alle spiergroepen terug.
+            string.IsNullOrWhiteSpace(searchTerm) ||
+            // Als de zoekbalk wel is ingevuld filter de spiergroepen met wat vergeleken is.
+            x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+        );
+
+}
+

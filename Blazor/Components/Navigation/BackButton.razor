@@ -1,0 +1,25 @@
+﻿<button class="back-btn" @onclick="HandleBack">
+    <i class="fa-solid fa-arrow-left fa-fw"></i>
+</button>
+
+@code {
+    // Dit is de pagina waar je naar gestuurd wordt wanneer er geen browser geschiedenis is.
+    [Parameter] public string Fallback { get; set; } = "/Dashboard";
+
+    // Injecteren van pagina benodigdheden.
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+
+    // Deze methode wordt uitgevoerd wanneer de gebruiker op de terug-knop klikt.
+    private async Task HandleBack()
+    {
+        // Roept de JavaScript funcit goBack aan. Gaat terug naar laatst bezochten browsergeschiedenis.
+        var hasHistory = await JS.InvokeAsync<bool>("goBack");
+
+        // Als er geen history is navigeer naar Fallback-pagina gestuurd.
+        if (!hasHistory)
+        {
+            Navigation.NavigateTo(Fallback);
+        }
+    }
+}
