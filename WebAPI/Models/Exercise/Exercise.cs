@@ -1,4 +1,6 @@
-﻿namespace WebAPI.Models.Exercises
+﻿using WebAPI.Models.Workout;
+
+namespace WebAPI.Models.Exercises
 {
     public class Exercise
     {
@@ -8,5 +10,7 @@
         public string? ImageUrl { get; set; }
 
         public ICollection<ExerciseMuscleGroup> ExerciseMuscleGroups { get; set; }
+
+        public ICollection<WorkoutExercise> WorkoutExercise { get; set; } = new List<WorkoutExercise>();
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebAPI.Services;
 
@@ -11,9 +12,11 @@ using WebAPI.Services;
 namespace WebAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260813201026_Workouts")]
+    partial class Workouts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -320,24 +323,6 @@ namespace WebAPI.Migrations
                     b.ToTable("Workouts");
                 });
 
-            modelBuilder.Entity("WebAPI.Models.Workout.WorkoutExercise", b =>
-                {
-                    b.Property<int>("ExerciseId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("WorkoutId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("ExerciseId", "WorkoutId");
-
-                    b.HasIndex("WorkoutId");
-
-                    b.ToTable("WorkoutExercises");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -408,40 +393,14 @@ namespace WebAPI.Migrations
                     b.Navigation("MuscleGroup");
                 });
 
-            modelBuilder.Entity("WebAPI.Models.Workout.WorkoutExercise", b =>
-                {
-                    b.HasOne("WebAPI.Models.Exercises.Exercise", "Exercise")
-                        .WithMany("WorkoutExercise")
-                        .HasForeignKey("ExerciseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("WebAPI.Models.Workout.Workout", "Workout")
-                        .WithMany("WorkoutExercise")
-                        .HasForeignKey("WorkoutId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Exercise");
-
-                    b.Navigation("Workout");
-                });
-
             modelBuilder.Entity("WebAPI.Models.Exercises.Exercise", b =>
                 {
                     b.Navigation("ExerciseMuscleGroups");
-
-                    b.Navigation("WorkoutExercise");
                 });
 
             modelBuilder.Entity("WebAPI.Models.Exercises.MuscleGroup", b =>
                 {
                     b.Navigation("ExerciseMuscleGroups");
-                });
-
-            modelBuilder.Entity("WebAPI.Models.Workout.Workout", b =>
-                {
-                    b.Navigation("WorkoutExercise");
                 });
 #pragma warning restore 612, 618
         }

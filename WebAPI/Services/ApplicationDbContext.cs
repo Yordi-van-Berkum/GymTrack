@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using WebAPI.Models;
 using WebAPI.Models.Auth;
 using WebAPI.Models.Exercises;
+using WebAPI.Models.Workout;
 
 namespace WebAPI.Services
 {
@@ -17,6 +18,10 @@ namespace WebAPI.Services
         public DbSet<Exercise> Exercises { get; set; }
 
         public DbSet<ExerciseMuscleGroup> ExerciseMuscleGroups { get; set; }
+
+        public DbSet<Workout> Workouts { get; set; }
+
+        public DbSet<WorkoutExercise> WorkoutExercises { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -34,6 +39,19 @@ namespace WebAPI.Services
                 .HasOne(x => x.MuscleGroup)
                 .WithMany(m => m.ExerciseMuscleGroups)
                 .HasForeignKey(x => x.MuscleGroupId);
+
+            builder.Entity<WorkoutExercise>()
+                .HasKey(ew => new { ew.ExerciseId, ew.WorkoutId });
+
+            builder.Entity<WorkoutExercise>()
+                .HasOne(ew => ew.Exercise)
+                .WithMany(e => e.WorkoutExercise)
+                .HasForeignKey(ew => ew.ExerciseId);
+
+            builder.Entity<WorkoutExercise>()
+                .HasOne(ew => ew.Workout)
+                .WithMany(w => w.WorkoutExercise)
+                .HasForeignKey(ew => ew.WorkoutId);
         }
     }
 }

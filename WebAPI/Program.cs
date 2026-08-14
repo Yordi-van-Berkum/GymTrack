@@ -96,6 +96,7 @@ builder.Services.AddAuthorization();
 // Registreert eigen applicatieservices.
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IExercisesService, ExercisesService>();
+builder.Services.AddScoped<IWorkoutsService, WorkoutsService>();
 
 
 // Registreert controllers.

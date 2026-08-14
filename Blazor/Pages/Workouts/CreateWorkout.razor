@@ -1,0 +1,99 @@
+﻿@page "/CreateWorkout"
+@using Blazor.Models.Workouts
+@implements IDisposable
+
+<div class="page-container">
+
+    <div class="pagetitle-back">
+      <BackButton />
+        <div class="pagetitle">Create Workout</div>
+    </div>
+
+      <div class="create-workout-card">
+            <EditForm Model="@workoutDto" OnValidSubmit="AddWorkout">
+                <DataAnnotationsValidator />
+
+                <div class="create-workout-form-group">
+                    <label>Workout Name</label>
+                    <InputText class="create-workout-form-control" @bind-Value="workoutDto.Name" /> <ValidationMessage For="@(() => workoutDto.Name)" />
+                </div>
+
+                <div class="create-workout-form-group">
+                    <label>Workout Type</label>
+                <InputSelect class="create-workout-form-control" @bind-Value="workoutDto.Type">
+                        @foreach (var workoutType in Enum.GetValues<WorkoutType>())
+                        {
+                            <option value="@workoutType">@workoutType</option>
+                        }
+                    </InputSelect>
+                <ValidationMessage For="@(() => workoutDto.Type)" />
+                </div>
+
+                <button type="submit" class="submit-workout-btn" disabled="@isSubmitting"><i class="fa-solid fa-plus"></i>@(isSubmitting ? "Creating..." : "Create Workout")</button>
+
+            </EditForm>
+     </div>
+</div>
+
+@code {
+    // Model waarin de gegevens van de nieuwe workout worden opgeslagen.
+    private readonly WorkoutDto workoutDto = new();
+
+    // Voorkomt dat meerdere create requests tegelijkertijd worden verstuurd.
+    private bool isSubmitting;
+
+
+    // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private CancellationToken cancellationToken => _cancellationTokenSource.Token;
+
+
+    // Injecteren van benodigheden van de pagina
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private WorkoutsService WorkoutsService { get; set; } = default!;
+    [Inject] private ToastService ToastService { get; set; } = default!;
+
+    private async Task AddWorkout()
+    {
+        // Voorkomt dubbele requests wanneer de gebruiker meerdere keren klikt.
+        if (isSubmitting)
+            return;
+
+        try
+        {
+            // Blokkeert de submit-knop tijdens het aanmaken van de workout.
+            isSubmitting = true;
+
+            // Maakt de workout aan via de workouts service.
+            var message = await WorkoutsService.CreateWorkoutAsync(workoutDto, cancellationToken);
+
+            // Geeft een succesmelding wanneer de workout succesvol is aangemaakt.
+            if (message is not null)
+            {
+                ToastService.ShowToast(message, ToastLevel.Success);
+                Navigation.NavigateTo("/Workouts");
+                return;
+            }
+
+            // Geeft een foutmelding wanneer de service geen succesmelding teruggeeft.
+            ToastService.ShowToast("Something went wrong.", ToastLevel.Error);
+        }
+        catch (OperationCanceledException)
+        {
+            // Een geannuleerde request hoeft geen foutmelding aan de gebruiker te tonen.
+        }
+        finally
+        {
+            // Zorgt ervoor dat de submit-knop altijd weer beschikbaar wordt.
+            isSubmitting = false;
+        }
+    }
+
+    // Annuleert lopende requests wanneer de component wordt verwijderd.
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+
+}

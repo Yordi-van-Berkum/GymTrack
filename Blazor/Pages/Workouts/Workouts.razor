@@ -1,0 +1,31 @@
+﻿@page "/Workouts"
+
+<div class="page-container">
+    <div class="pagetitle-back">
+        <BackButton />
+        <div class="pagetitle">Workouts</div>
+        <div class="action-buttons">
+            <button class="add-button-pageheader" @onclick="CreateWorkout"> <i class="fa-solid fa-plus fa-w"></i> New Workout</button>
+        </div>
+    </div>
+
+    <div class="search">
+        <i class="fa fa-search search-icon fa-fw"></i>
+        <input type="text" class="search-input" placeholder="Search..." @bind="searchTerm" @bind:event="oninput" />
+    </div>
+</div>
+
+@code {
+    // Hier wordt er opgeslagen wat je typt in de zoekbalk als string
+    private string searchTerm = "";
+
+
+    // Injecteren van benodigheden van de pagina
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    private void CreateWorkout()
+    {
+        // Navigeert je naar de pagina om een workout aan te maken
+        Navigation.NavigateTo("/CreateWorkout");
+    }
+}
