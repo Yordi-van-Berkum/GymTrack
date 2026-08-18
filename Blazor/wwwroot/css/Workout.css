@@ -1,1 +1,112 @@
-﻿
+﻿.workout-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 18px;
+    width: 100%;
+    margin-top: 24px;
+}
+
+.workout-card {
+    min-height: 230px;
+    padding: 24px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: #020617;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+    .workout-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(122, 123, 255, 0.5);
+        box-shadow: 0 8px 25px rgba(122, 123, 255, 0.35);
+    }
+
+.workout-icon-wrapper {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.workout-icon {
+    font-size: 48px;
+    color: #e2e8f0;
+    transition: transform 0.2s ease;
+}
+
+
+.strength-icon {
+    color: #7a7bff;
+}
+
+.cardio-icon {
+    color: #ff6b81;
+}
+
+.mixed-icon {
+    color: #ffb84d;
+}
+
+.workout-card:hover .workout-icon {
+    transform: scale(1.05);
+}
+
+.workout-name {
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.workout-count {
+    margin-top: 6px;
+    color: #8b98ad;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+    .workout-count span {
+        color: #e2e8f0;
+        font-weight: 700;
+    }
+
+@media (max-width: 700px) {
+
+    .workout-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .workout-card {
+        min-height: 220px;
+        padding: 24px 18px;
+    }
+
+    .workout-icon-wrapper {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 16px;
+    }
+
+    .workout-icon {
+        font-size: 48px;
+    }
+
+    .workout-name {
+        font-size: 18px;
+    }
+
+    .workout-count {
+        font-size: 14px;
+    }
+}

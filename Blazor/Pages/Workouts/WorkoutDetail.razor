@@ -1,0 +1,70 @@
+﻿@page "/WorkoutDetail/{WorkoutId:guid}"
+
+<div class="page-container">
+    <div class="pagetitle-back">
+        <BackButton />
+        <div class="pagetitle">@myWorkout.Name</div>
+        <div class="action-buttons">
+            <button class="button-pageheader delete-button"> <i class="fa-solid fa-x fa-w"></i> Delete Workout</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    // Meegestuurde WorkoutId vanuit de workouts pagina.
+    [Parameter] public Guid WorkoutId { get; set; }
+
+    // Opgehaalde workout
+    private Workout myWorkout;
+
+    // Boolean om pagina in te laden wanneer alles opgehaald is wordt die false en toont die de pagina
+    private bool isLoading;
+
+    // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    // Injecteren van benodigheden van de pagina
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private WorkoutsService WorkoutsService { get; set; } = default!;
+    [Inject] ToastService ToastService { get; set; } = default!;
+
+    // Aanroepen van de LoadAllDataAsync functie bij het inladen van de pagina.
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllDataAsync();
+    }
+
+    // Zorgt ervoor dat de pagina pas inlaad wanneer alle functie zijn aangeroepen.
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            await Task.WhenAll(
+                LoadMyWorkoutAsync(_cancellationTokenSource.Token)
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd omdat de pagina is verlaten.
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // Ophalen van alle workouts van een gebruiker.
+    private async Task LoadMyWorkoutAsync(CancellationToken cancellationToken)
+    {
+        myWorkout = await WorkoutsService.GetWorkoutByIdAsync(WorkoutId, cancellationToken);
+    }
+
+    // Annuleert lopende requests wanneer de component wordt verwijderd.
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+}

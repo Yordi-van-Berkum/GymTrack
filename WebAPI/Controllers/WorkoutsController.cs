@@ -39,5 +39,50 @@ namespace WebAPI.Controllers
             }
         }
 
+        [HttpGet("myworkouts")]
+        public async Task<IActionResult> GetMyWorkoutsAsync(CancellationToken cancellationToken)
+        {
+            // Haalt de ID van de ingelogde gebruiker uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            try
+            {
+                // Haalt alle workouts op die van de ingelogde gebruiker zijn.
+                var workouts = await _workoutsService.GetMyWorkoutsAsync(userId, cancellationToken);
+
+                // Geeft de workouts terug.
+                return Ok(workouts);
+            }
+            catch (Exception)
+            {
+                // Vangt onverwachte fouten af zonder interne informatie naar de client te sturen.
+                return StatusCode(500, "Something went wrong.");
+            }
+        }
+
+        [HttpGet("getworkoutbyid/{workoutId:guid}")]
+        public async Task<IActionResult> GetWorkoutById(Guid workoutId, CancellationToken cancellationToken)
+        {
+            // Haalt de ID van de ingelogde gebruiker uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            try
+            {
+                // Haalt de workout op van de ingelogde gebruiker.
+                var workout = await _workoutsService.GetWorkoutByIdAsync(workoutId, userId, cancellationToken);
+
+                // Workout bestaat niet of behoort niet toe aan de gebruiker.
+                if (workout is null)
+                    return NotFound("Workout not found.");
+
+                return Ok(workout);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Something went wrong.");
+            }
+        }
     }
 }

@@ -77,7 +77,7 @@ body {
     align-items: center;
 }
 
-.add-button-pageheader {
+.button-pageheader {
     height: 44px;
     padding: 0 16px;
     display: flex;
@@ -94,7 +94,7 @@ body {
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
 }
 
-    .add-button-pageheader:hover {
+    .button-pageheader:hover {
         transform: translateY(-2px);
         background: #111c32;
         border-color: rgba(122, 123, 255, 0.5);
@@ -102,14 +102,25 @@ body {
         box-shadow: 0 8px 25px rgba(122, 123, 255, 0.35);
     }
 
-    .add-button-pageheader i {
+    .add-button i {
         color: #7a7bff;
         transition: color 0.2s ease;
     }
 
-    .add-button-pageheader:hover i {
+    .add-button:hover i {
         color: #a5a6ff;
     }
+
+.delete-button i {
+    color: #ef4444;
+    transition: color 0.2s ease;
+}
+
+.delete-button:hover i {
+    color: #f87171;
+}
+
+
 
 .search {
     position: relative;
@@ -202,7 +213,7 @@ body {
         margin: 0;
     }
 
-    .add-button-pageheader {
+    .button-pageheader {
         width: 100%;
         height: 44px;
     }
