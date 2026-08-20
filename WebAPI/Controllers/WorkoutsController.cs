@@ -99,15 +99,37 @@ namespace WebAPI.Controllers
                 // Return Ok als goed gegaan
                 return Ok("Exercise added to workout!");
             }
-            // Catch alle fouten waarvan de service UnauthorizedAccessException terug geeft en return met message.
-            catch (UnauthorizedAccessException ex)
-            {
-                return Forbid(ex.Message);
-            }
             // Catch alle fouten waarvan de service InvalidOperationException terug geeft en return met message.
             catch (InvalidOperationException ex)
             {
-                return BadRequest(ex.Message);
+                return NotFound(ex.Message);
+            }
+            // Catch alle onverwachten fouten.
+            catch (Exception)
+            {
+                return StatusCode(500, "Something went wrong.");
+            }
+        }
+
+        [HttpGet("getexercisesbyworkoutid/{workoutId:guid}")]
+        public async Task<IActionResult> GetExercisesByWorkoutId(Guid workoutId, CancellationToken cancellationToken)
+        {
+            // Haal id op van ingelogde gebruiker
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user!");
+
+            try
+            {
+                // Haal de oefeningen op vanuit de service
+                var exercises = await _workoutsService.GetExercisesByWorkoutIdAsync(workoutId, userId, cancellationToken);
+
+                // Return Ok met de lijst van oefeningen
+                return Ok(exercises);
+            }
+            // Catch alle fouten waarvan de service InvalidOperationException terug geeft en return met message
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
             }
             // Catch alle onverwachten fouten.
             catch (Exception)

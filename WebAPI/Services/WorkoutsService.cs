@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Threading;
+using WebAPI.Models.Exercises;
 using WebAPI.Models.Workout;
 
 namespace WebAPI.Services
@@ -102,6 +104,35 @@ namespace WebAPI.Services
 
             // Slaat de nieuwe koppeling op in de database.
             await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<List<ExerciseDto>> GetExercisesByWorkoutIdAsync(Guid workoutId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Haal de workout op en controleert of de workout bestaat en van de ingelogde gebruiker is.
+            var workout = await _context.Workouts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(w => w.Id == workoutId && w.UserId == userId, cancellationToken);
+
+            // De workout bestaat niet of is niet van de ingelogde gebruiker.
+            if (workout is null)
+                throw new InvalidOperationException("Workout not found.");
+
+            // Haalt de oefeningen van de workout op, gesorteerd op volgorde.
+            var exercises = await _context.WorkoutExercises
+                .AsNoTracking()
+                .Where(ew => ew.WorkoutId == workoutId)
+                .OrderBy(ew => ew.SortOrder)
+                .Select(ew => new ExerciseDto
+                {
+                    Id = ew.Exercise.Id,
+                    Name = ew.Exercise.Name,
+                    ImageUrl = ew.Exercise.ImageUrl
+
+                })
+                .ToListAsync(cancellationToken);
+
+            // Geeft de oefeningen terug.
+            return exercises;
         }
     }
 }

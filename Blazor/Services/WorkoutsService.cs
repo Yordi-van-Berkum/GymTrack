@@ -1,4 +1,5 @@
-﻿using Blazor.Models.Workouts;
+﻿using Blazor.Models.Exercises;
+using Blazor.Models.Workouts;
 using System.Net.Http.Json;
 
 namespace Blazor.Services
@@ -49,5 +50,14 @@ namespace Blazor.Services
             // SafeActionApiCallAsync voert de HTTP-aanroep veilig uit. Deze functie staat in de SafeApiHelper.cs in de Services map.
             return await _safeApiHelper.SafeActionApiCallAsync(() => _httpClient.PostAsJsonAsync("api/workouts/addexercisetoworkout", workoutExerciseDto, cancellationToken));
         }
+
+        // Haalt alle oefeningen van een workout op.
+        public async Task<List<Exercise>> GetExercisesByWorkoutIdAsync(Guid workoutId, CancellationToken cancellationToken = default)
+        {
+            // SafeActionApiCallAsync voert de HTTP-aanroep veilig uit. Deze functie staat in de SafeApiHelper.cs in de Services map.
+            return await _safeApiHelper.SafeDataApiCallAsync<List<Exercise>>(() => _httpClient.GetAsync($"api/workouts/getexercisesbyworkoutid/{workoutId}", cancellationToken));
+        }
+
+
     }
 }

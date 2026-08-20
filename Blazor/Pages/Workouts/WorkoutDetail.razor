@@ -19,6 +19,23 @@
                 <button class="button-pageheader add-button" @onclick="NavigateToAddExerciseToWorkout"> <i class="fa-solid fa-plus"></i><span>Add Exercise</span></button>
             </div>
         </div>
+
+        <div class="exercise-container">
+            @foreach (var exercise in workoutExercises)
+            {
+                <div class="exercise-card" @onclick="() => ExerciseDetail(exercise.Id)">
+                    <div class="exercise-image-wrapper">
+                        <img src="@($"/Images/Exercises/{exercise.ImageUrl}")"
+                             alt="@exercise.Name"
+                             class="exercise-image" />
+                    </div>
+
+                    <div class="exercise-name">
+                        @exercise.Name
+                    </div>
+                </div>
+            }
+        </div>
     }
 </div>
 
@@ -28,6 +45,9 @@
 
     // Opgehaalde workout
     private Workout myWorkout;
+
+    // Lijst met oefenignen
+    private List<Exercise> workoutExercises = new();
 
     // Boolean om pagina in te laden wanneer alles opgehaald is wordt die false en toont die de pagina
     private bool isLoading;
@@ -54,7 +74,8 @@
             isLoading = true;
 
             await Task.WhenAll(
-                LoadMyWorkoutAsync(_cancellationTokenSource.Token)
+                LoadMyWorkoutAsync(_cancellationTokenSource.Token),
+                LoadExercisesAsync(_cancellationTokenSource.Token)
             );
         }
         catch (OperationCanceledException)
@@ -73,10 +94,23 @@
         myWorkout = await WorkoutsService.GetWorkoutByIdAsync(WorkoutId, cancellationToken);
     }
 
+    // Ophalen van de oefeningen van een workout.  
+    private async Task LoadExercisesAsync(CancellationToken cancellationToken)
+    {
+        workoutExercises = await WorkoutsService.GetExercisesByWorkoutIdAsync(WorkoutId, cancellationToken);
+    }
+
     // Navigeren naar de spiergroepen pagina om vanuit daar een oefening aan de workout toe te kunnen voegen.
     private void NavigateToAddExerciseToWorkout()
     {
         Navigation.NavigateTo($"/MuscleGroups/{WorkoutId}");
+    }
+
+
+    // Navigeren naar de detail pagina van de oefening.
+    private void ExerciseDetail(int exerciseId)
+    {
+        Navigation.NavigateTo($"/ExerciseDetail/{exerciseId}");
     }
 
     // Annuleert lopende requests wanneer de component wordt verwijderd.

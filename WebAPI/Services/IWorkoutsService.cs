@@ -1,4 +1,5 @@
-﻿using WebAPI.Models.Workout;
+﻿using WebAPI.Models.Exercises;
+using WebAPI.Models.Workout;
 
 namespace WebAPI.Services
 {
@@ -8,5 +9,6 @@ namespace WebAPI.Services
         Task<List<WorkoutDto>> GetMyWorkoutsAsync(Guid userId, CancellationToken cancellationToken = default);
         Task<WorkoutDto> GetWorkoutByIdAsync(Guid workoutId, Guid userId, CancellationToken cancellationToken = default);
         Task AddExerciseToWorkoutAsync(WorkoutExerciseDto workoutExerciseDto,Guid userId, CancellationToken cancellationToken = default);
+        Task<List<ExerciseDto>> GetExercisesByWorkoutIdAsync(Guid workoutId, Guid userId, CancellationToken cancellationToken = default);
     }
 }
