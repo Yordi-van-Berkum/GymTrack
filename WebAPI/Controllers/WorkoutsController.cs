@@ -84,5 +84,36 @@ namespace WebAPI.Controllers
                 return StatusCode(500, "Something went wrong.");
             }
         }
+
+        [HttpPost("addexercisetoworkout")]
+        public async Task<IActionResult> AddExerciseToWorkout(WorkoutExerciseDto workoutExerciseDto)
+        {
+            // Als de gebruiker niet is ingelogd, stuur Unauthorized terug met een toast message.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user");
+
+            try
+            {
+                // Stuur workoutExerciseDto en userId naar de service om de oefening aan de workout in de database toe te voegen.
+                await _workoutsService.AddExerciseToWorkoutAsync(workoutExerciseDto, userId);
+                // Return Ok als goed gegaan
+                return Ok("Exercise added to workout!");
+            }
+            // Catch alle fouten waarvan de service UnauthorizedAccessException terug geeft en return met message.
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            // Catch alle fouten waarvan de service InvalidOperationException terug geeft en return met message.
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            // Catch alle onverwachten fouten.
+            catch (Exception)
+            {
+                return StatusCode(500, "Something went wrong.");
+            }
+        }
     }
 }

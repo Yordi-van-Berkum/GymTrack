@@ -6,7 +6,7 @@
         <BackButton />
         <div class="pagetitle">Workouts</div>
         <div class="action-buttons">
-            <button class="button-pageheader add-button" @onclick="CreateWorkout"> <i class="fa-solid fa-plus fa-w"></i> New Workout</button>
+            <button class="button-pageheader add-button" @onclick="CreateWorkout"> <i class="fa-solid fa-plus fa-w"></i> <span>New Workout</span></button>
         </div>
     </div>
 
@@ -15,22 +15,33 @@
         <input type="text" class="search-input" placeholder="Search..." @bind="searchTerm" @bind:event="oninput" />
     </div>
 
-    <div class="workout-container">
-        @foreach (var workout in FilteredMyWorkouts)
-        {
-            <div class="workout-card" @onclick="() => WorkoutDetail(workout.Id)">
-                <div class="workout-icon-wrapper">
-                    <i class="@GetWorkoutIcon(workout.Type) workout-icon"></i>
-                </div>
+    @if (isLoading)
+    {
+        <p class="status-message">Loading workouts...</p>
+    }
+    else if (!myWorkouts.Any())
+    {
+        <p class="status-message">No workouts found.</p>
+    }
+    else
+    {
+        <div class="workout-container">
+            @foreach (var workout in FilteredMyWorkouts)
+            {
+                <div class="workout-card" @onclick="() => WorkoutDetail(workout.Id)">
+                    <div class="workout-icon-wrapper">
+                        <i class="@GetWorkoutIcon(workout.Type) workout-icon"></i>
+                    </div>
 
-                <div class="workout-name">@workout.Name</div>
+                    <div class="workout-name">@workout.Name</div>
 
-                <div class="workout-count">
-                    <span>@workout.ExerciseCount</span> exercises
+                    <div class="workout-count">
+                        <span>@workout.ExerciseCount</span> exercises
+                    </div>
                 </div>
-            </div>
-        }
-    </div>
+            }
+        </div>
+    }
 
 </div>
 

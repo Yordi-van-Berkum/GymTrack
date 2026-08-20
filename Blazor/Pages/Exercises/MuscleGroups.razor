@@ -1,4 +1,4 @@
-﻿@page "/MuscleGroups"
+﻿@page "/MuscleGroups/{WorkoutId:guid?}"
 @implements IDisposable
 
 <div class="page-container">
@@ -14,11 +14,11 @@
 
     @if (isLoading)
     {
-        <p>Loading muscle groups...</p>
+        <p class="status-message">Loading muscle groups...</p>
     }
     else if (!FilteredMuscleGroups.Any())
     {
-        <p>No muscle groups found!</p>
+        <p class="status-message">No muscle groups found!</p>
     }
     else
     {
@@ -48,6 +48,12 @@
 
 
 @code {
+    // Wanneer er een WorkoutId ontvangen is zijn we op deze pagina gekomen via de workouts pagina.
+    // Mocht er een WorkoutId mee gestuurd zijn dan zitten we in de WorkoutMode.
+    // Mocht er geen WorkoutId mee gestuurd zijn krijgen we gewoon de standaard pagina.
+    [Parameter] public Guid? WorkoutId { get; set; }
+    private bool WorkoutMode => WorkoutId.HasValue;
+
     // Hier wordt er opgeslagen wat je typt in de zoekbalk als string
     private string searchTerm = "";
 
@@ -100,7 +106,16 @@
     // Navigeer naar de oefeningen van een bepaalde spiergroep.
     private void NavigateToExercises(int muscleGroupId)
     {
-        Navigation.NavigateTo($"/Exercises/{muscleGroupId}");
+        // Als de WorkoutMode true is wordt je gestuurd naar de oefeningen pagina om een oefening toe te voegen aan een workout.
+        if (WorkoutMode)
+        {
+            Navigation.NavigateTo($"/Exercises/{muscleGroupId}/{WorkoutId}");
+        }
+        // Anders navigeer je gewoon naar de standaard oefeninge pagina.
+        else
+        {
+            Navigation.NavigateTo($"/Exercises/{muscleGroupId}");
+        }
     }
 
 

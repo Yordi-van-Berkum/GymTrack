@@ -20,7 +20,6 @@ body {
     gap: 14px;
     margin-bottom: 24px;
     width: 100%;
-    flex-wrap: wrap;
 }
 
 .pagetitle {
@@ -75,6 +74,7 @@ body {
     margin-left: auto;
     display: flex;
     align-items: center;
+    gap: 12px;
 }
 
 .button-pageheader {
@@ -91,6 +91,7 @@ body {
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
+    white-space: nowrap;
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
 }
 
@@ -102,25 +103,25 @@ body {
         box-shadow: 0 8px 25px rgba(122, 123, 255, 0.35);
     }
 
-    .add-button i {
-        color: #7a7bff;
-        transition: color 0.2s ease;
-    }
+.add-button i {
+    color: #7a7bff;
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
 
-    .add-button:hover i {
-        color: #a5a6ff;
-    }
+.add-button:hover i {
+    color: #a5a6ff;
+}
 
 .delete-button i {
     color: #ef4444;
+    font-size: 12px;
     transition: color 0.2s ease;
 }
 
 .delete-button:hover i {
     color: #f87171;
 }
-
-
 
 .search {
     position: relative;
@@ -149,11 +150,10 @@ body {
 .search-icon {
     position: absolute;
     left: 15px;
-    color: #8b98ad;
+    color: #7a7bff;
     font-size: 15px;
     pointer-events: none;
     transition: color 0.2s ease;
-    color: #7a7bff;
 }
 
 .search:focus-within .search-icon {
@@ -178,6 +178,12 @@ body {
         opacity: 1;
     }
 
+.status-message {
+    color: #e2e8f0;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 20px;
+}
 
 @media (max-width: 700px) {
 
@@ -211,19 +217,28 @@ body {
         grid-column: 1 / -1;
         width: 100%;
         margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
 
     .button-pageheader {
         width: 100%;
         height: 44px;
+        display: grid;
+        grid-template-columns: 24px 1fr;
+        align-items: center;
+        gap: 8px;
+        padding: 0 16px;
     }
 
-    .search {
-        width: 100%;
-        height: 44px;
-    }
+        .button-pageheader i {
+            width: 24px;
+            text-align: center;
+            justify-self: center;
+        }
 
-    .search-input {
-        font-size: 15px;
-    }
+        .button-pageheader span {
+            text-align: left;
+        }
 }

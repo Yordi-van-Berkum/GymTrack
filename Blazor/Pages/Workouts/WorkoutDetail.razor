@@ -1,13 +1,25 @@
 ﻿@page "/WorkoutDetail/{WorkoutId:guid}"
 
 <div class="page-container">
-    <div class="pagetitle-back">
-        <BackButton />
-        <div class="pagetitle">@myWorkout.Name</div>
-        <div class="action-buttons">
-            <button class="button-pageheader delete-button"> <i class="fa-solid fa-x fa-w"></i> Delete Workout</button>
+    @if (isLoading)
+    {
+        <p class="status-message">Loading workout...</p>
+    }
+    else if (myWorkout is null)
+    {
+        <p class="status-message">Workout not found.</p>
+    }
+    else
+    {
+        <div class="pagetitle-back">
+            <BackButton />
+            <div class="pagetitle">@myWorkout.Name</div>
+            <div class="action-buttons">
+                <button class="button-pageheader delete-button"> <i class="fa-solid fa-x"></i> <span>Delete Workout</span></button>
+                <button class="button-pageheader add-button" @onclick="NavigateToAddExerciseToWorkout"> <i class="fa-solid fa-plus"></i><span>Add Exercise</span></button>
+            </div>
         </div>
-    </div>
+    }
 </div>
 
 @code {
@@ -55,10 +67,16 @@
         }
     }
 
-    // Ophalen van alle workouts van een gebruiker.
+    // Ophalen van een workout.
     private async Task LoadMyWorkoutAsync(CancellationToken cancellationToken)
     {
         myWorkout = await WorkoutsService.GetWorkoutByIdAsync(WorkoutId, cancellationToken);
+    }
+
+    // Navigeren naar de spiergroepen pagina om vanuit daar een oefening aan de workout toe te kunnen voegen.
+    private void NavigateToAddExerciseToWorkout()
+    {
+        Navigation.NavigateTo($"/MuscleGroups/{WorkoutId}");
     }
 
     // Annuleert lopende requests wanneer de component wordt verwijderd.

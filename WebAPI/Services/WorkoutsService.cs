@@ -41,7 +41,7 @@ namespace WebAPI.Services
                     Id = w.Id,
                     Name = w.Name,
                     Type = w.Type,
-                    ExerciseCount = 0,
+                    ExerciseCount = w.WorkoutExercise.Count,
                 })
                 .OrderBy(w => w.Name)
                 .ToListAsync(cancellationToken);
@@ -60,6 +60,48 @@ namespace WebAPI.Services
                     Type = w.Type,
                 })
                 .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task AddExerciseToWorkoutAsync(WorkoutExerciseDto workoutExerciseDto, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Haalt de workout op wanneer deze bestaat én toebehoort aan de ingelogde gebruiker.
+            // Include laadt de bestaande koppelingen met oefeningen zodat we kunnen controleren of de oefening al aan deze workout is toegevoegd en de volgende Order kunnen bepalen.
+            var workout = await _context.Workouts
+                .Include(w => w.WorkoutExercise)
+                .FirstOrDefaultAsync(w => w.Id == workoutExerciseDto.WorkoutId && w.UserId == userId, cancellationToken);
+
+            // De workout bestaat niet of behoort niet toe aan de ingelogde gebruiker.
+            if (workout is null)
+                throw new InvalidOperationException("Workout not found!");
+
+            // Controleert of de opgegeven oefening daadwerkelijk bestaat in de database.
+            var exerciseExists = await _context.Exercises.AnyAsync(e => e.Id == workoutExerciseDto.ExerciseId, cancellationToken);
+
+            // De oefening bestaat niet in de database.
+            if (!exerciseExists)
+                throw new InvalidOperationException("Exercise not found!");
+
+            // Controleert of de oefening al aan deze workout gekoppeld is om dubbele koppelingen te voorkomen.
+            var alreadyAdded = workout.WorkoutExercise.Any(ew => ew.ExerciseId == workoutExerciseDto.ExerciseId);
+
+            // De oefening is al onderdeel van deze workout.
+            if (alreadyAdded)
+                throw new InvalidOperationException("Exercise already added to workout!");
+
+            // Bepaalt de volgende positie van de oefening binnen de workout.
+            // Als de workout nog geen oefeningen bevat, begint de Order bij 1.
+            var nextOrder = workout.WorkoutExercise.Count == 0 ? 1 : workout.WorkoutExercise.Max(ew => ew.SortOrder) + 1;
+
+            // Maakt een nieuwe koppeling tussen de workout en de oefening aan.
+            workout.WorkoutExercise.Add(new WorkoutExercise
+            {
+                WorkoutId = workout.Id,
+                ExerciseId = workoutExerciseDto.ExerciseId,
+                SortOrder = nextOrder
+            });
+
+            // Slaat de nieuwe koppeling op in de database.
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

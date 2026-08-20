@@ -35,5 +35,19 @@ namespace Blazor.Services
             // SafeDataApiCallAsync voert de HTTP-aanroep veilig uit. Deze functie staat in de SafeApiHelper.cs in de Services map.
             return await _safeApiHelper.SafeDataApiCallAsync<Workout>(() => _httpClient.GetAsync($"api/workouts/getworkoutbyid/{workoutId}",cancellationToken));
         }
+
+        // Voegt een oefening toe aan een workout.
+        public async Task<string> AddExerciseToWorkoutAsync(Guid workoutId, int exerciseId, CancellationToken cancellationToken = default)
+        {
+            // Maak het object aan.
+            var workoutExerciseDto = new WorkoutExerciseDto
+            {
+                WorkoutId = workoutId,
+                ExerciseId = exerciseId
+            };
+
+            // SafeActionApiCallAsync voert de HTTP-aanroep veilig uit. Deze functie staat in de SafeApiHelper.cs in de Services map.
+            return await _safeApiHelper.SafeActionApiCallAsync(() => _httpClient.PostAsJsonAsync("api/workouts/addexercisetoworkout", workoutExerciseDto, cancellationToken));
+        }
     }
 }

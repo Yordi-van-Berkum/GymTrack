@@ -1,19 +1,25 @@
-﻿@page "/ExerciseDetail/{ExerciseId:int}"
+﻿@page "/ExerciseDetail/{ExerciseId:int}/{WorkoutId:guid?}"
 
 <div class="page-container">
     @if (isLoading)
     {
-        <p>Loading exercise...</p>
+        <p class="status-message">Loading exercise...</p>
     }
     else if (exercise is null)
     {
-        <p>Exercise not found.</p>
+        <p class="status-message">Exercise not found.</p>
     }
     else
     {
         <div class="pagetitle-back">
             <BackButton />
             <div class="pagetitle">@exercise.Name</div>
+            @if (WorkoutMode)
+            {
+                <div class="action-buttons">
+                    <button class="button-pageheader add-button" @onclick="() => OpenConfirmAddExerciseToWorkoutPopup(exercise)"><i class="fa-solid fa-plus"></i> Add @exercise.Name to @myWorkout.Name</button>
+                </div>
+            }
         </div>
 
         <div class="exercise-detail-card">
@@ -34,22 +40,57 @@
     }
 </div>
 
+@if (showConfirmExerciseToWorkoutPopup)
+{
+    <div class="confirm-modal-overlay">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-title">Add <span>@selectedExerciseName</span> To <span>@myWorkout.Name</span> </div>
+
+            <div class="confirm-modal-actions">
+                <button class="confirm-modal-btn confirm-modal-btn-cancel" @onclick="ClosePopup" disabled="@isAddingExercise"><i class="fa-solid fa-x"></i>Cancel</button>
+                <button class="confirm-modal-btn confirm-modal-btn-confirm" @onclick="ConfirmAddExerciseToWorkout" disabled="@isAddingExercise"><i class="fa-solid fa-plus"></i>Add Exercise</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
+    // Wanneer er een WorkoutId ontvangen is zijn we op deze pagina gekomen via de workouts pagina.
+    // Mocht er een WorkoutId mee gestuurd zijn dan zitten we in de WorkoutMode.
+    // Mocht er geen WorkoutId mee gestuurd zijn krijgen we gewoon de standaard pagina.
+    [Parameter] public Guid? WorkoutId { get; set; }
+    private bool WorkoutMode => WorkoutId.HasValue;
+
     // Meegestuurde id van de oefening
     [Parameter] public int ExerciseId { get; set; }
 
     // Injecteren van benodigheden van de pagina
     [Inject] private ExercisesService ExercisesService { get; set; } = default!;
+    [Inject] private WorkoutsService WorkoutsService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private ToastService ToastService { get; set; } = default!;
 
     // Opgehaalde oefening
     private Exercise? exercise;
 
+    // Opgehaalde workout
+    private Workout? myWorkout;
+
     // Boolean om pagina in te laden wanneer alles opgehaald is wordt die false en toont die de pagina
     private bool isLoading;
 
+    // Boolean zorgt ervoor dat wanneer je op de knop klikt om oefeningen aan workout toe te voegen deze knop inactief wordt.
+    private bool isAddingExercise;
+
     // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
     private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    // Boolean om confirm popup te tonen
+    private bool showConfirmExerciseToWorkoutPopup = false;
+    // Het id van de geselecteerde oefening om toe te voegen aan de workout.
+    private int selectedExerciseId;
+    // De naam van de geselecteerde oefeningen om te laten zien in de popup.
+    private string selectedExerciseName = "";
 
     // Aanroepen van de LoadAllDataAsync functie bij het inladen van de pagina.
     protected override async Task OnInitializedAsync()
@@ -64,9 +105,16 @@
         {
             isLoading = true;
 
-            await Task.WhenAll(
+            var tasks = new List<Task>{
                 LoadExerciseDetailAsync(_cancellationTokenSource.Token)
-            );
+            };
+
+            if (WorkoutMode)
+            {
+                tasks.Add(LoadMyWorkoutAsync(_cancellationTokenSource.Token));
+            }
+
+            await Task.WhenAll(tasks);
         }
         catch (OperationCanceledException)
         {
@@ -83,6 +131,74 @@
     {
         exercise = await ExercisesService.GetExerciseByIdAsync(ExerciseId, cancellationToken);
     }
+
+    // Ophalen van de workout wanneer WorkoutId mee gestuurd is.
+    private async Task LoadMyWorkoutAsync(CancellationToken cancellationToken)
+    {   
+        // Controlleer of WorkoutId een waarde heeft.
+        if (!WorkoutId.HasValue)
+            return;
+
+        myWorkout = await WorkoutsService.GetWorkoutByIdAsync(WorkoutId.Value, cancellationToken);
+    }
+
+    // Toevoegen van een oefening aan een workout.
+    private async Task ConfirmAddExerciseToWorkout()
+    {
+        // Zorgt ervoor dat ik WorkoutId alleen gebruik als de waarde niet null is.
+        if (isAddingExercise || !WorkoutId.HasValue)
+            return;
+
+        // Zorgt ervoor dat de knoppen inactief worden.
+        isAddingExercise = true;
+        // Zorgt ervoor dat de popup verdwijnt.
+        showConfirmExerciseToWorkoutPopup = false;
+
+        try
+        {
+            // Toevoegen van de oefening aan de workout en ontvang een bericht terug.
+            var message = await WorkoutsService.AddExerciseToWorkoutAsync(WorkoutId.Value, selectedExerciseId, _cancellationTokenSource.Token);
+
+            // Toon toast wanneer toevoegen succesvol is.
+            ToastService.ShowToast(message, ToastLevel.Success);
+
+            // Navigeer naar de workout detail pagina.
+            Navigation.NavigateTo($"/WorkoutDetail/{WorkoutId.Value}");
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd omdat de component wordt verlaten.
+        }
+        catch (Exception ex)
+        {
+            // Toon error toast wanneer er iets fout is gegaan.
+            ToastService.ShowToast(ex.Message, ToastLevel.Error);
+        }
+        finally
+        {
+            // Maak de knoppen weer actief.
+            isAddingExercise = false;
+        }
+
+    }
+
+    // Zorgt ervoor dat de popup opent om oefening toe te voegen aan workout
+    private void OpenConfirmAddExerciseToWorkoutPopup(Exercise exercise)
+    {
+        // Voegt het id van de oefening toe aan de private string.
+        selectedExerciseId = exercise.Id;
+        // Voegt de naam van de oefening toe aan de private string.
+        selectedExerciseName = exercise.Name;
+        // Zet boolean op true om popup te tonen.
+        showConfirmExerciseToWorkoutPopup = true;
+    }
+
+    // Zet boolean weer op false zodat popup verdwijnt.
+    private void ClosePopup()
+    {
+        showConfirmExerciseToWorkoutPopup = false;
+    }
+
 
     // Annuleert lopende requests wanneer de component wordt verwijderd.
     public void Dispose()
