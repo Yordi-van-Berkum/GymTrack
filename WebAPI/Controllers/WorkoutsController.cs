@@ -114,22 +114,49 @@ namespace WebAPI.Controllers
         [HttpGet("getexercisesbyworkoutid/{workoutId:guid}")]
         public async Task<IActionResult> GetExercisesByWorkoutId(Guid workoutId, CancellationToken cancellationToken)
         {
-            // Haal id op van ingelogde gebruiker
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
             if (!User.TryGetUserId(out var userId))
                 return Unauthorized("Invalid user!");
 
             try
             {
-                // Haal de oefeningen op vanuit de service
+                // Haal de oefeningen op vanuit de service.
                 var exercises = await _workoutsService.GetExercisesByWorkoutIdAsync(workoutId, userId, cancellationToken);
 
-                // Return Ok met de lijst van oefeningen
+                // Return Ok met de lijst van oefeningen.
                 return Ok(exercises);
             }
-            // Catch alle fouten waarvan de service InvalidOperationException terug geeft en return met message
+            // Catch alle fouten waarvan de service InvalidOperationException terug geeft en return met message.
             catch (InvalidOperationException ex)
             {
                 return NotFound(ex.Message);
+            }
+            // Catch alle onverwachten fouten.
+            catch (Exception)
+            {
+                return StatusCode(500, "Something went wrong.");
+            }
+        }
+
+        [HttpDelete("deleteworkout/{workoutId}")]
+        public async Task<IActionResult> DeleteWorkout(Guid workoutId)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user");
+
+            try
+            {
+                // Verwijdert de workout die bij de ingelogde gebruiker hoort.
+                await _workoutsService.DeleteWorkoutAsync(workoutId, userId);
+
+                // Geeft een succesvolle response terug na het verwijderen.
+                return Ok("Workout deleted successfully!");
+            }
+            // Catch alle fouten waarvan de service InvalidOperationException terug geeft en return met message.
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
             }
             // Catch alle onverwachten fouten.
             catch (Exception)

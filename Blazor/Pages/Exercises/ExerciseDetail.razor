@@ -17,7 +17,7 @@
             @if (WorkoutMode)
             {
                 <div class="action-buttons">
-                    <button class="button-pageheader add-button" @onclick="() => OpenConfirmAddExerciseToWorkoutPopup(exercise)"><i class="fa-solid fa-plus"></i> Add @exercise.Name to @myWorkout.Name</button>
+                    <button class="button-pageheader add-button" @onclick="() => OpenConfirmAddExerciseToWorkoutPopup(exercise)" disabled="@isAdding"><i class="fa-solid fa-plus"></i>@(isAdding ? "Adding..." : $"Add {exercise.Name} to {myWorkout.Name}")</button>
                 </div>
             }
         </div>
@@ -75,6 +75,9 @@
 
     // Opgehaalde workout
     private Workout? myWorkout;
+
+    // Voorkomt dat meerdere toevoeg requests tegelijkertijd worden verstuurd.
+    private bool isAdding;
 
     // Boolean om pagina in te laden wanneer alles opgehaald is wordt die false en toont die de pagina
     private bool isLoading;

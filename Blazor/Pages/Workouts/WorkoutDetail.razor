@@ -15,7 +15,7 @@
             <BackButton />
             <div class="pagetitle">@myWorkout.Name</div>
             <div class="action-buttons">
-                <button class="button-pageheader delete-button"> <i class="fa-solid fa-x"></i> <span>Delete Workout</span></button>
+                <button class="button-pageheader delete-button" @onclick="() => OpenConfirmDeleteWorkoutPopup()"> <i class="fa-solid fa-x"></i> <span>Delete Workout</span></button>
                 <button class="button-pageheader add-button" @onclick="NavigateToAddExerciseToWorkout"> <i class="fa-solid fa-plus"></i><span>Add Exercise</span></button>
             </div>
         </div>
@@ -39,6 +39,20 @@
     }
 </div>
 
+@if (showConfirmDeleteWorkoutPopup)
+{
+    <div class="confirm-modal-overlay">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-title">You want to delete <span>@myWorkout.Name</span>? </div>
+
+            <div class="confirm-modal-actions">
+                <button class="confirm-modal-btn confirm-modal-btn-cancel" @onclick="ClosePopup" disabled="@isDeletingWorkout"><i class="fa-solid fa-x"></i>Cancel</button>
+                <button class="confirm-modal-btn confirm-modal-btn-delete" @onclick="ConfirmDeleteWorkout" disabled=@isDeletingWorkout"><i class="fa-solid fa-trash"></i>@(isDeletingWorkout ? "Deleting..." : "Delete")</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     // Meegestuurde WorkoutId vanuit de workouts pagina.
     [Parameter] public Guid WorkoutId { get; set; }
@@ -51,6 +65,13 @@
 
     // Boolean om pagina in te laden wanneer alles opgehaald is wordt die false en toont die de pagina
     private bool isLoading;
+
+    // Boolean om confirm popup te tonen
+    private bool showConfirmDeleteWorkoutPopup = false;
+
+
+    // Boolean zorgt ervoor dat wanneer je op de knop klikt om de workout te verwijderen dat deze knop inactief wordt.
+    private bool isDeletingWorkout;
 
     // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
     private readonly CancellationTokenSource _cancellationTokenSource = new();
@@ -94,6 +115,46 @@
         myWorkout = await WorkoutsService.GetWorkoutByIdAsync(WorkoutId, cancellationToken);
     }
 
+    // Verwijderen van een workout.
+    private async Task ConfirmDeleteWorkout()
+    {
+        // Voorkomt dat er meerdere delete requests tegelijk worden verstuurd.
+        if (isDeletingWorkout)
+            return;
+
+        // Zorgt ervoor dat de knoppen tijdens het verwijderen inactief worden.
+        isDeletingWorkout = true;
+
+        // Zorgt ervoor dat de bevestigingspopup verdwijnt.
+        showConfirmDeleteWorkoutPopup = false;
+
+        try
+        {
+            // Verwijdert de workout en ontvangt een bericht terug.
+            var message = await WorkoutsService.DeleteWorkoutAsync(WorkoutId, _cancellationTokenSource.Token);
+
+            // Toon een succesmelding wanneer de workout succesvol is verwijderd.
+            ToastService.ShowToast(message, ToastLevel.Success);
+
+            // Navigeert terug naar de workouts-pagina.
+            Navigation.NavigateTo("/Workouts");
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd omdat de component wordt verlaten.
+        }
+        catch (Exception ex)
+        {
+            // Toon een foutmelding wanneer er iets fout is gegaan.
+            ToastService.ShowToast(ex.Message, ToastLevel.Error);
+        }
+        finally
+        {
+            // Maakt de knoppen weer actief.
+            isDeletingWorkout = false;
+        }
+    }
+
     // Ophalen van de oefeningen van een workout.  
     private async Task LoadExercisesAsync(CancellationToken cancellationToken)
     {
@@ -106,11 +167,16 @@
         Navigation.NavigateTo($"/MuscleGroups/{WorkoutId}");
     }
 
-
     // Navigeren naar de detail pagina van de oefening.
     private void ExerciseDetail(int exerciseId)
     {
         Navigation.NavigateTo($"/ExerciseDetail/{exerciseId}");
+    }
+
+    private void ClosePopup()
+    {
+        // Zet boolean weer op false zodat popup verdwijnt.
+        showConfirmDeleteWorkoutPopup = false;
     }
 
     // Annuleert lopende requests wanneer de component wordt verwijderd.
@@ -118,5 +184,11 @@
     {
         _cancellationTokenSource.Cancel();
         _cancellationTokenSource.Dispose();
+    }
+
+    // Zet de bool op true zodat popup getoond wordt.
+    private void OpenConfirmDeleteWorkoutPopup()
+    {
+        showConfirmDeleteWorkoutPopup = true;
     }
 }

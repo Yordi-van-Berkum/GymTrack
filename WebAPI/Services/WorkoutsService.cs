@@ -134,5 +134,23 @@ namespace WebAPI.Services
             // Geeft de oefeningen terug.
             return exercises;
         }
+
+        public async Task DeleteWorkoutAsync(Guid workoutId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Haal workout op inclusief gekoppelde oefeningen
+            var workout = await _context.Workouts
+                .Include(w => w.WorkoutExercise)
+                .FirstOrDefaultAsync(w => w.Id == workoutId && w.UserId == userId, cancellationToken);
+
+            // Als workout niet bestaat throw exceptions
+            if (workout is null)
+                throw new InvalidOperationException("Workout not found.");
+
+            // Verwijderen van de workout en de oefeningen bij deze workout horen
+            _context.Workouts.Remove(workout);
+
+            // Opslaan
+            await _context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

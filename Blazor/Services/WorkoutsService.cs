@@ -58,6 +58,13 @@ namespace Blazor.Services
             return await _safeApiHelper.SafeDataApiCallAsync<List<Exercise>>(() => _httpClient.GetAsync($"api/workouts/getexercisesbyworkoutid/{workoutId}", cancellationToken));
         }
 
+        // Verwijdert een workout van de ingelogde gebruiker.
+        public async Task<string> DeleteWorkoutAsync(Guid workoutId, CancellationToken cancellationToken = default)
+        {
+            // SafeActionApiCallAsync voert de HTTP-aanroep veilig uit. Deze functie staat in de SafeApiHelper.cs in de Services map.
+            return await _safeApiHelper.SafeActionApiCallAsync(() => _httpClient.DeleteAsync($"api/workouts/deleteworkout/{workoutId}", cancellationToken));
+        }
+
 
     }
 }
