@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using WebAPI.Exceptions;
 using WebAPI.Models.Auth;
 
 namespace WebAPI.Services
@@ -43,7 +44,7 @@ namespace WebAPI.Services
             if (!result.Succeeded)
             {
                 var errors = string.Join(Environment.NewLine, result.Errors.Select(e => e.Description));
-                throw new InvalidOperationException(errors);
+                throw new ConflictException(errors);
             }
         }
 
@@ -55,7 +56,7 @@ namespace WebAPI.Services
             // Controleert of de gebruiker bestaat.
             if (user == null)
             {
-                throw new InvalidOperationException("Invalid email or password!");
+                throw new InvalidCredentialsException("Invalid email or password!");
             }
 
             // Controleert of het ingevoerde wachtwoord correct is.
@@ -64,7 +65,7 @@ namespace WebAPI.Services
             // Foutmelding wanneer het wachtwoord niet klopt.
             if (!passwordValid)
             {
-                throw new InvalidOperationException("Invalid email or password!");
+                throw new InvalidCredentialsException("Invalid email or password!");
             }
 
             // Maakt de claims aan die opgeslagen worden in de JWT token.

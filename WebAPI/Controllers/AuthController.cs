@@ -21,64 +21,35 @@ namespace WebAPI.Controllers
         [HttpGet("getuser")]
         public IActionResult GetUser()
         {
-            // Geeft de basisinformatie van de ingelogde gebruiker terug naar Blazor.
+            // Geeft de basisinformatie van de ingelogde gebruiker terug.
             return Ok(new
             {
                 // Haalt het unieke gebruikers-ID uit de JWT claim.
                 userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
-                // Haalt het emailadres uit de JWT claim.
-                email = User.FindFirst(ClaimTypes.Email)?.Value,
+
+                // Haalt het e-mailadres uit de JWT claim.
+                email = User.FindFirst(ClaimTypes.Email)?.Value
             });
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto registerDto)
         {
-            try
-            {
-                // Roept de authenticatie service aan om een nieuwe gebruiker te registreren.
-                await _authService.RegisterAsync(registerDto);
-                // Geeft een succesvolle HTTP 200 response terug wanneer de registratie gelukt is.
-                return Ok("Account successfully created.");
-            }
-            catch (InvalidOperationException ex)
-            {
-                // Wordt gebruikt voor InvalidOperationException fouten vanuit de service.
-                // De foutmelding wordt doorgestuurd naar de frontend zodat deze in een toastmelding weergegeven kan worden.
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                // Wordt gebruikt bij onverwachte fouten.
-                // Geeft een standaard foutmelding terug zodat er geen technische informatie terug gestuurd wordt wat niet voor de gebruiker is.
-                return StatusCode(500, "Something went wrong.");
-            }
+            // Registreert een nieuwe gebruiker via de authentication service.
+            await _authService.RegisterAsync(registerDto);
+
+            // Geeft een succesvolle response wanneer het account is aangemaakt.
+            return Ok("Account successfully created.");
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto loginDto)
         {
-            try
-            {
-                // Roept de authenticatie service aan om de gebruiker te controleren
-                // en JWT tokens aan te maken wanneer de gegevens correct zijn.
-                var tokens = await _authService.LoginAsync(loginDto);
+            // Controleert de login en maakt JWT tokens aan.
+            var tokens = await _authService.LoginAsync(loginDto);
 
-                // Geeft de tokens terug aan de frontend zodat deze opgeslagen kunnen worden en gebruikt kunnen worden voor geautoriseerde API requests.
-                return Ok(tokens);
-            }
-            catch (InvalidOperationException ex)
-            {
-                // Wordt gebruikt voor InvalidOperationException fouten vanuit de service, bijvoorbeeld verkeerde email of wachtwoord.
-                // De foutmelding wordt doorgestuurd naar de frontend zodat deze in een toastmelding weergegeven kan worden.
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                // Wordt gebruikt bij onverwachte fouten.
-                // Geeft een standaard foutmelding terug zodat er geen technische informatie terug gestuurd wordt wat niet voor de gebruiker is.
-                return StatusCode(500, "Something went wrong.");
-            }
+            // Geeft de tokens terug aan de frontend.
+            return Ok(tokens);
         }
     }
 }

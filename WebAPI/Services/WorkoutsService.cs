@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Threading;
+using WebAPI.Exceptions;
 using WebAPI.Models.Exercises;
 using WebAPI.Models.Workout;
 
@@ -74,21 +74,21 @@ namespace WebAPI.Services
 
             // De workout bestaat niet of behoort niet toe aan de ingelogde gebruiker.
             if (workout is null)
-                throw new InvalidOperationException("Workout not found!");
+                throw new NotFoundException("Exercise not found!");
 
             // Controleert of de opgegeven oefening daadwerkelijk bestaat in de database.
             var exerciseExists = await _context.Exercises.AnyAsync(e => e.Id == workoutExerciseDto.ExerciseId, cancellationToken);
 
             // De oefening bestaat niet in de database.
             if (!exerciseExists)
-                throw new InvalidOperationException("Exercise not found!");
+                throw new NotFoundException("Exercise not found!");
 
             // Controleert of de oefening al aan deze workout gekoppeld is om dubbele koppelingen te voorkomen.
             var alreadyAdded = workout.WorkoutExercise.Any(ew => ew.ExerciseId == workoutExerciseDto.ExerciseId);
 
             // De oefening is al onderdeel van deze workout.
             if (alreadyAdded)
-                throw new InvalidOperationException("Exercise already added to workout!");
+                throw new ConflictException("Exercise already added to workout!");
 
             // Bepaalt de volgende positie van de oefening binnen de workout.
             // Als de workout nog geen oefeningen bevat, begint de Order bij 1.
@@ -115,7 +115,7 @@ namespace WebAPI.Services
 
             // De workout bestaat niet of is niet van de ingelogde gebruiker.
             if (workout is null)
-                throw new InvalidOperationException("Workout not found.");
+                throw new NotFoundException("Workout not found.");
 
             // Haalt de oefeningen van de workout op, gesorteerd op volgorde.
             var exercises = await _context.WorkoutExercises
@@ -144,7 +144,7 @@ namespace WebAPI.Services
 
             // Als workout niet bestaat throw exceptions
             if (workout is null)
-                throw new InvalidOperationException("Workout not found.");
+                throw new NotFoundException("Workout not found.");
 
             // Verwijderen van de workout en de oefeningen bij deze workout horen
             _context.Workouts.Remove(workout);

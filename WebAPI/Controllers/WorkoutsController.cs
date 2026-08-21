@@ -12,6 +12,7 @@ namespace WebAPI.Controllers
     public class WorkoutsController : ControllerBase
     {
         private readonly IWorkoutsService _workoutsService;
+
         public WorkoutsController(IWorkoutsService workoutsService)
         {
             _workoutsService = workoutsService;
@@ -20,95 +21,57 @@ namespace WebAPI.Controllers
         [HttpPost("createworkout")]
         public async Task<IActionResult> CreateWorkout([FromBody] WorkoutDto workoutDto, CancellationToken cancellationToken)
         {
-            // Haalt de ID van de ingelogde gebruiker uit de claims.
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
             if (!User.TryGetUserId(out var userId))
                 return Unauthorized("Invalid user.");
 
-            try
-            {
-                // Maakt de workout aan voor de ingelogde gebruiker.
-                await _workoutsService.CreateWorkoutAsync(workoutDto, userId, cancellationToken);
+            // Maakt de workout aan voor de ingelogde gebruiker.
+            await _workoutsService.CreateWorkoutAsync(workoutDto, userId, cancellationToken);
 
-                // Geeft een succesvolle response terug wanneer de workout is aangemaakt.
-                return Ok("Workout created!");
-            }
-            catch (Exception)
-            {
-                // Vangt onverwachte fouten af zonder interne informatie naar de client te sturen.
-                return StatusCode(500, "Something went wrong.");
-            }
+            // Geeft een succesvolle response terug wanneer de workout is aangemaakt.
+            return Ok("Workout created!");
         }
 
         [HttpGet("myworkouts")]
-        public async Task<IActionResult> GetMyWorkoutsAsync(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetMyWorkouts(CancellationToken cancellationToken)
         {
-            // Haalt de ID van de ingelogde gebruiker uit de claims.
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
             if (!User.TryGetUserId(out var userId))
                 return Unauthorized("Invalid user.");
 
-            try
-            {
-                // Haalt alle workouts op die van de ingelogde gebruiker zijn.
-                var workouts = await _workoutsService.GetMyWorkoutsAsync(userId, cancellationToken);
+            // Haalt alle workouts op die van de ingelogde gebruiker zijn.
+            var workouts = await _workoutsService.GetMyWorkoutsAsync(userId, cancellationToken);
 
-                // Geeft de workouts terug.
-                return Ok(workouts);
-            }
-            catch (Exception)
-            {
-                // Vangt onverwachte fouten af zonder interne informatie naar de client te sturen.
-                return StatusCode(500, "Something went wrong.");
-            }
+            // Geeft de workouts terug.
+            return Ok(workouts);
         }
 
         [HttpGet("getworkoutbyid/{workoutId:guid}")]
         public async Task<IActionResult> GetWorkoutById(Guid workoutId, CancellationToken cancellationToken)
         {
-            // Haalt de ID van de ingelogde gebruiker uit de claims.
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
             if (!User.TryGetUserId(out var userId))
                 return Unauthorized("Invalid user.");
 
-            try
-            {
-                // Haalt de workout op van de ingelogde gebruiker.
-                var workout = await _workoutsService.GetWorkoutByIdAsync(workoutId, userId, cancellationToken);
+            // Haalt de workout op en controleert in de service of deze van de gebruiker is.
+            var workout = await _workoutsService.GetWorkoutByIdAsync(workoutId, userId, cancellationToken);
 
-                // Workout bestaat niet of behoort niet toe aan de gebruiker.
-                if (workout is null)
-                    return NotFound("Workout not found.");
-
-                return Ok(workout);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "Something went wrong.");
-            }
+            // Geeft de gevonden workout terug.
+            return Ok(workout);
         }
 
         [HttpPost("addexercisetoworkout")]
-        public async Task<IActionResult> AddExerciseToWorkout(WorkoutExerciseDto workoutExerciseDto)
+        public async Task<IActionResult> AddExerciseToWorkout([FromBody] WorkoutExerciseDto workoutExerciseDto, CancellationToken cancellationToken)
         {
-            // Als de gebruiker niet is ingelogd, stuur Unauthorized terug met een toast message.
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
             if (!User.TryGetUserId(out var userId))
-                return Unauthorized("Invalid user");
+                return Unauthorized("Invalid user.");
 
-            try
-            {
-                // Stuur workoutExerciseDto en userId naar de service om de oefening aan de workout in de database toe te voegen.
-                await _workoutsService.AddExerciseToWorkoutAsync(workoutExerciseDto, userId);
-                // Return Ok als goed gegaan
-                return Ok("Exercise added to workout!");
-            }
-            // Catch alle fouten waarvan de service InvalidOperationException terug geeft en return met message.
-            catch (InvalidOperationException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            // Catch alle onverwachten fouten.
-            catch (Exception)
-            {
-                return StatusCode(500, "Something went wrong.");
-            }
+            // Voegt de oefening toe aan de workout van de ingelogde gebruiker.
+            await _workoutsService.AddExerciseToWorkoutAsync(workoutExerciseDto, userId, cancellationToken);
+
+            // Geeft een succesvolle response terug wanneer de oefening is toegevoegd.
+            return Ok("Exercise added to workout!");
         }
 
         [HttpGet("getexercisesbyworkoutid/{workoutId:guid}")]
@@ -116,53 +79,27 @@ namespace WebAPI.Controllers
         {
             // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
             if (!User.TryGetUserId(out var userId))
-                return Unauthorized("Invalid user!");
+                return Unauthorized("Invalid user.");
 
-            try
-            {
-                // Haal de oefeningen op vanuit de service.
-                var exercises = await _workoutsService.GetExercisesByWorkoutIdAsync(workoutId, userId, cancellationToken);
+            // Haalt de oefeningen op en controleert in de service of de workout van de gebruiker is.
+            var exercises = await _workoutsService.GetExercisesByWorkoutIdAsync(workoutId, userId, cancellationToken);
 
-                // Return Ok met de lijst van oefeningen.
-                return Ok(exercises);
-            }
-            // Catch alle fouten waarvan de service InvalidOperationException terug geeft en return met message.
-            catch (InvalidOperationException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            // Catch alle onverwachten fouten.
-            catch (Exception)
-            {
-                return StatusCode(500, "Something went wrong.");
-            }
+            // Geeft de gevonden oefeningen terug.
+            return Ok(exercises);
         }
 
-        [HttpDelete("deleteworkout/{workoutId}")]
-        public async Task<IActionResult> DeleteWorkout(Guid workoutId)
+        [HttpDelete("deleteworkout/{workoutId:guid}")]
+        public async Task<IActionResult> DeleteWorkout(Guid workoutId,CancellationToken cancellationToken)
         {
             // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
             if (!User.TryGetUserId(out var userId))
-                return Unauthorized("Invalid user");
+                return Unauthorized("Invalid user.");
 
-            try
-            {
-                // Verwijdert de workout die bij de ingelogde gebruiker hoort.
-                await _workoutsService.DeleteWorkoutAsync(workoutId, userId);
+            // Verwijdert de workout die bij de ingelogde gebruiker hoort.
+            await _workoutsService.DeleteWorkoutAsync(workoutId,userId, cancellationToken);
 
-                // Geeft een succesvolle response terug na het verwijderen.
-                return Ok("Workout deleted successfully!");
-            }
-            // Catch alle fouten waarvan de service InvalidOperationException terug geeft en return met message.
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            // Catch alle onverwachten fouten.
-            catch (Exception)
-            {
-                return StatusCode(500, "Something went wrong.");
-            }
+            // Geeft een succesvolle response terug wanneer de workout is verwijderd.
+            return Ok("Workout deleted successfully!");
         }
     }
 }

@@ -5,7 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WebAPI.Models.Auth;
 using WebAPI.Services;
-
+using WebAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +26,6 @@ builder.Services
     {
         // Zorgt ervoor dat ieder e-mailadres maar één keer gebruikt kan worden.
         options.User.RequireUniqueEmail = true;
-
 
         // Instellingen voor wachtwoordbeveiliging.
         options.Password.RequiredLength = 8;
@@ -109,6 +108,10 @@ builder.Services.AddOpenApi();
 
 
 var app = builder.Build();
+
+
+// Vangt onverwachte exceptions centraal af voor alle requests.
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 
 // Staat requests vanuit Blazor toe.
