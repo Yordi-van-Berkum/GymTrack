@@ -115,5 +115,33 @@ namespace WebAPI.Controllers
             // Geeft een succesvolle response terug wanneer de workout is aangepast.
             return Ok("Workout updated!");
         }
+
+        [HttpGet("{workoutId:guid}/exercises/{exerciseId:int}")]
+        public async Task<IActionResult> IsExerciseInWorkout(Guid workoutId, int exerciseId, CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Controleert of de oefening aan de workout van de ingelogde gebruiker is toegevoegd.
+            var isInWorkout = await _workoutsService.IsExerciseInWorkoutAsync(workoutId, exerciseId, userId, cancellationToken);
+
+            // Geeft true of false terug.
+            return Ok(isInWorkout);
+        }
+
+        [HttpPost("deleteexercisefromworkout")]
+        public async Task<IActionResult> DeleteExerciseFromWorkout([FromBody] WorkoutExerciseDto exerciseWorkoutDto, CancellationToken cancellationToken)
+        {
+            // Haalt de ID van de ingelogde gebruiker uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Verwijdert de oefening uit de workout van de ingelogde gebruiker.
+            await _workoutsService.DeleteExerciseFromWorkoutAsync(exerciseWorkoutDto, userId, cancellationToken);
+
+            // Geeft een succesvolle response terug wanneer de oefening verwijderd is.
+            return Ok("Exercise removed from workout!");
+        }
     }
 }

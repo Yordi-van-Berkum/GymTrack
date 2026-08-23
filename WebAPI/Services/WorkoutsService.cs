@@ -170,5 +170,40 @@ namespace WebAPI.Services
             // Slaat de wijzigingen op in de database.
             await _context.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task<bool> IsExerciseInWorkoutAsync(Guid workoutId, int exerciseId,Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Checkt of oefening aan de workout toegevoegd is.
+            // True als die toegevoegd is.
+            // False als die nog niet toegevoegd is.
+            return await _context.WorkoutExercises
+                .AsNoTracking()
+                .AnyAsync(ew => ew.WorkoutId == workoutId && ew.ExerciseId == exerciseId && ew.Workout.UserId == userId,cancellationToken);
+        }
+
+        public async Task DeleteExerciseFromWorkoutAsync(WorkoutExerciseDto exerciseWorkoutDto, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Haalt de workout op en controleert direct of deze van de ingelogde gebruiker is.
+            var workout = await _context.Workouts
+                .FirstOrDefaultAsync(w => w.Id == exerciseWorkoutDto.WorkoutId && w.UserId == userId, cancellationToken);
+
+            // Workout bestaat niet of behoort niet toe aan de ingelogde gebruiker.
+            if (workout is null)
+                throw new InvalidOperationException("Workout not found.");
+
+            // Zoekt de koppeling tussen de workout en de oefening.
+            var exerciseWorkout = await _context.WorkoutExercises
+                .FirstOrDefaultAsync(ew => ew.WorkoutId == exerciseWorkoutDto.WorkoutId && ew.ExerciseId == exerciseWorkoutDto.ExerciseId, cancellationToken);
+
+            // De oefening is niet toegevoegd aan deze workout.
+            if (exerciseWorkout is null)
+                throw new InvalidOperationException("Exercise is not in workout.");
+
+            // Verwijdert de koppeling uit de database.
+            _context.WorkoutExercises.Remove(exerciseWorkout);
+
+            // Slaat de wijziging op.
+            await _context.SaveChangesAsync(cancellationToken);
+        }
     }
 }
