@@ -123,6 +123,16 @@ body {
     color: #f87171;
 }
 
+.update-button i {
+    color: #55b88a;
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.update-button:hover i {
+    color: #7bd3aa;
+}
+
 .search {
     position: relative;
     width: 100%;

@@ -4,7 +4,7 @@ namespace WebAPI.Models.Workout
 {
     public class WorkoutDto
     {
-        public Guid Id { get; set; }
+        public Guid? Id { get; set; }
 
         [Required]
         [StringLength(20, MinimumLength = 2)]

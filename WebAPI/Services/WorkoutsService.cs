@@ -149,7 +149,25 @@ namespace WebAPI.Services
             // Verwijderen van de workout en de oefeningen bij deze workout horen
             _context.Workouts.Remove(workout);
 
-            // Opslaan
+            // Slaat de wijzigingen op in de database.
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task UpdateWorkoutAsync(WorkoutDto workoutDto, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Haalt de workout op en controleert of deze van de ingelogde gebruiker is.
+            var workout = await _context.Workouts
+                .FirstOrDefaultAsync(w => w.Id == workoutDto.Id && w.UserId == userId, cancellationToken);
+
+            // De workout bestaat niet of is niet van de ingelogde gebruiker.
+            if (workout is null)
+                throw new NotFoundException("Workout not found.");
+
+            // Past de gegevens van de workout aan.
+            workout.Name = workoutDto.Name.Trim();
+            workout.Type = workoutDto.Type;
+
+            // Slaat de wijzigingen op in de database.
             await _context.SaveChangesAsync(cancellationToken);
         }
     }

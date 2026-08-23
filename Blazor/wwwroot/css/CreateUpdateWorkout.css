@@ -1,4 +1,4 @@
-﻿.create-workout-card {
+﻿.create-update-workout-card {
     width: 100%;
     max-width: 650px;
     margin: 20px auto;
@@ -11,20 +11,20 @@
     box-sizing: border-box;
 }
 
-.create-workout-form-group {
+.create-update-workout-form-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
     margin-bottom: 20px;
 }
 
-    .create-workout-form-group label {
+    .create-update-workout-form-group label {
         color: #e2e8f0;
         font-size: 14px;
         font-weight: 600;
     }
 
-.create-workout-form-control {
+.create-update-workout-form-control {
     width: 100%;
     height: 44px;
     background: #0f172a;
@@ -38,11 +38,11 @@
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-    .create-workout-form-control:hover {
+    .create-update-workout-form-control:hover {
         border-color: rgba(255,255,255,0.15);
     }
 
-    .create-workout-form-control:focus {
+    .create-update-workout-form-control:focus {
         outline: none;
         border-color: rgba(122,123,255,0.5);
         box-shadow: 0 0 15px rgba(122,123,255,0.25);
@@ -50,14 +50,12 @@
         color: #ffffff;
     }
 
-
-select.create-workout-form-control {
+select.create-update-workout-form-control {
     appearance: auto;
     cursor: pointer;
 }
 
-
-.create-workout-form-group .validation-message {
+.create-update-workout-form-group .validation-message {
     width: 100%;
     padding: 12px 16px;
     border-radius: 10px;
@@ -104,6 +102,15 @@ select.create-workout-form-control {
         color: #7a7bff;
     }
 
+    .submit-workout-btn .update-icon {
+        color: #5fbd72;
+        transition: color 0.2s ease;
+    }
+
+    .submit-workout-btn:hover .update-icon {
+        color: #82d991;
+    }
+
     .submit-workout-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
@@ -112,20 +119,20 @@ select.create-workout-form-control {
     }
 
 @media(max-width:450px) {
-    .create-workout-card {
+    .create-update-workout-card {
         padding: 20px;
     }
 
-    .create-workout-form-group {
+    .create-update-workout-form-group {
         gap: 8px;
         margin-bottom: 16px;
     }
 
-        .create-workout-form-group label {
+        .create-update-workout-form-group label {
             font-size: 13px;
         }
 
-    .create-workout-form-control {
+    .create-update-workout-form-control {
         height: 44px;
         font-size: 15px;
     }

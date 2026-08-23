@@ -11,5 +11,6 @@ namespace WebAPI.Services
         Task AddExerciseToWorkoutAsync(WorkoutExerciseDto workoutExerciseDto,Guid userId, CancellationToken cancellationToken = default);
         Task<List<ExerciseDto>> GetExercisesByWorkoutIdAsync(Guid workoutId, Guid userId, CancellationToken cancellationToken = default);
         Task DeleteWorkoutAsync(Guid workoutId, Guid userId, CancellationToken cancellationToken = default);
+        Task UpdateWorkoutAsync(WorkoutDto workoutDto, Guid userId, CancellationToken cancellationToken = default);
     }
 }

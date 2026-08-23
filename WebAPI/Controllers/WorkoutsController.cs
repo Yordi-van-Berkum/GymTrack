@@ -101,5 +101,19 @@ namespace WebAPI.Controllers
             // Geeft een succesvolle response terug wanneer de workout is verwijderd.
             return Ok("Workout deleted successfully!");
         }
+
+        [HttpPut("updateworkout")]
+        public async Task<IActionResult> UpdateWorkout([FromBody] WorkoutDto workoutDto, CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Past de workout aan en controleert in de service of deze van de gebruiker is.
+            await _workoutsService.UpdateWorkoutAsync(workoutDto, userId, cancellationToken);
+
+            // Geeft een succesvolle response terug wanneer de workout is aangepast.
+            return Ok("Workout updated!");
+        }
     }
 }

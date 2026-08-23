@@ -1,0 +1,160 @@
+﻿@page "/CreateAndUpdateWorkout/{WorkoutId:guid?}"
+@using Blazor.Models.Workouts
+@implements IDisposable
+
+<div class="page-container">
+
+    <div class="pagetitle-back">
+      <BackButton />
+        <div class="pagetitle">@(UpdateWorkoutMode ? "Update Workout" : "Create Workout")</div>
+    </div>
+
+    <div class="create-update-workout-card">
+            <EditForm Model="@workoutDto" OnValidSubmit="SaveWorkout">
+                <DataAnnotationsValidator />
+
+                <div class="create-update-workout-form-group">
+                    <label>Workout Name</label>
+                <InputText class="create-update-workout-form-control" @bind-Value="workoutDto.Name" />
+                <ValidationMessage For="@(() => workoutDto.Name)" />
+                </div>
+
+                <div class="create-update-workout-form-group">
+                    <label>Workout Type</label>
+                <InputSelect class="create-update-workout-form-control" @bind-Value="workoutDto.Type">
+                        @foreach (var workoutType in Enum.GetValues<WorkoutType>())
+                        {
+                            <option value="@workoutType">@workoutType</option>
+                        }
+                    </InputSelect> 
+                    <ValidationMessage For="@(() => workoutDto.Type)" />
+                </div>
+
+            <button type="submit" class="submit-workout-btn" disabled="@isSubmitting" <i class="fa-solid @(UpdateWorkoutMode ? "fa-pen-to-square update-icon" : "fa-plus")"></i>  @(isSubmitting ? (UpdateWorkoutMode ? "Updating..." : "Creating...") : (UpdateWorkoutMode ? "Update Workout" : "Create Workout"))</button>
+
+            </EditForm>
+     </div>
+</div>
+
+@code {
+    // Wanneer deze pagina een WorkoutId ontvangt betekent het dat we op de pagina zijn op een workout aan te passen.
+    // Mocht er een WorkoutId mee gestuurd zijn dan zitten we in de UpdateWorkoutMode.
+    // Mocht er geen WorkoutId mee gestuurd zijn krijgen we gewoon de standaard pagina om een workout aan te maken/.
+    [Parameter] public Guid? WorkoutId { get; set; }
+    private bool UpdateWorkoutMode => WorkoutId.HasValue;
+
+    // Model waarin de gegevens van de nieuwe workout worden opgeslagen.
+    private readonly WorkoutDto workoutDto = new();
+
+    // Voorkomt dat meerdere create requests tegelijkertijd worden verstuurd.
+    private bool isSubmitting;
+
+
+    // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private CancellationToken cancellationToken => _cancellationTokenSource.Token;
+
+
+    // Injecteren van benodigheden van de pagina
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private WorkoutsService WorkoutsService { get; set; } = default!;
+    [Inject] private ToastService ToastService { get; set; } = default!;
+
+    // Wordt uitgevoerd wanneer de pagina wordt geladen.
+    protected override async Task OnInitializedAsync()
+    {
+        // Alleen bij update-modus wordt de bestaande workout opgehaald.
+        if (UpdateWorkoutMode)
+        {
+            await LoadWorkoutAsync();
+        }
+    }
+
+    // Wordt uitgevoerd wanneer het formulier geldig is.
+    private async Task SaveWorkout()
+    {
+        // Voorkomt dubbele requests.
+        if (isSubmitting)
+            return;
+
+        try
+        {
+            // Blokkeert de submit-knop tijdens het aanmaken van de workout.
+            isSubmitting = true;
+
+            // Bericht wat je otnvangt vanaf de backend.
+            string message;
+
+            // Als UpdateWorkoutMode true is update workout anders maak nieuwe workout aan.
+            if (UpdateWorkoutMode)
+            {
+                // Bestaande workout aanpassen.
+                message = await WorkoutsService.UpdateWorkoutAsync(workoutDto, cancellationToken);
+            }
+            else
+            {
+                // Nieuwe workout aanmaken.
+                message = await WorkoutsService.CreateWorkoutAsync(workoutDto, cancellationToken);
+            }
+
+            // Geeft succesvolle toast als updaten of aanmaken gelukt is.
+            ToastService.ShowToast(message, ToastLevel.Success);
+
+            // Navigeren naar de gewenste pagina.
+            Navigation.NavigateTo(UpdateWorkoutMode ? $"/WorkoutDetail/{WorkoutId}" : "/Workouts");
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd omdat de pagina wordt verlaten.
+        }
+        catch (Exception ex)
+        {
+            // Toont de foutmelding in een toast wanneer updaten of aanmaken niet gelukt is.
+            ToastService.ShowToast(ex.Message, ToastLevel.Error);
+        }
+        finally
+        {
+            // Zorgt ervoor dat de submit-knop weer beschikbaar wordt.
+            isSubmitting = false;
+        }
+    }
+
+    // Haalt de bestaande workout op en vult het formulier ermee.
+    private async Task LoadWorkoutAsync()
+    {
+        try
+        {
+            var workout = await WorkoutsService.GetWorkoutByIdAsync(WorkoutId!.Value, cancellationToken);
+
+            if (workout is null)
+            {
+                ToastService.ShowToast("Workout not found.", ToastLevel.Error);
+                Navigation.NavigateTo("/Workouts");
+                return;
+            }
+
+            // Vult het formulier met de bestaande gegevens.
+            workoutDto.Id = workout.Id;
+            workoutDto.Name = workout.Name;
+            workoutDto.Type = workout.Type;
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd omdat de pagina wordt verlaten.
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowToast(ex.Message, ToastLevel.Error);
+        }
+    }
+
+
+
+    // Annuleert lopende requests wanneer de component wordt verwijderd.
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+
+}

@@ -15,6 +15,7 @@
             <BackButton />
             <div class="pagetitle">@myWorkout.Name</div>
             <div class="action-buttons">
+                <button class="button-pageheader update-button" @onclick="() => NavigateToUpdateToWorkout()"> <i class="fa-solid fa-pen-to-square"></i> <span>Update Workout</span></button>
                 <button class="button-pageheader delete-button" @onclick="() => OpenConfirmDeleteWorkoutPopup()"> <i class="fa-solid fa-x"></i> <span>Delete Workout</span></button>
                 <button class="button-pageheader add-button" @onclick="NavigateToAddExerciseToWorkout"> <i class="fa-solid fa-plus"></i><span>Add Exercise</span></button>
             </div>
@@ -172,6 +173,13 @@
     {
         Navigation.NavigateTo($"/ExerciseDetail/{exerciseId}");
     }
+    
+    // Navigeren naar de detail pagina van de oefening.
+    private void NavigateToUpdateToWorkout()
+    {
+        Navigation.NavigateTo($"/CreateAndUpdateWorkout/{WorkoutId}");
+    }
+
 
     private void ClosePopup()
     {
