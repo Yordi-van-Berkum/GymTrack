@@ -1,0 +1,94 @@
+﻿.workout-summary-card {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 24px;
+    background: #020617;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.workout-summary-title {
+    margin: 0 0 24px 0;
+    color: white;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.workout-summary-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.workout-summary-exercise {
+    width: 100%;
+}
+
+.workout-summary-exercise-name {
+    margin: 0 0 12px 0;
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.workout-summary-set-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.workout-summary-set-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    color: #e2e8f0;
+    font-size: 15px;
+}
+
+.workout-summary-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+    .workout-summary-actions button {
+        min-width: 180px;
+    }
+
+@media (max-width: 600px) {
+    .workout-summary-card {
+        padding: 16px;
+    }
+
+    .workout-summary-title {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .workout-summary-exercise-name {
+        font-size: 18px;
+    }
+
+    .workout-summary-set-item {
+        min-height: 44px;
+        padding: 10px 12px;
+    }
+
+    .workout-summary-actions {
+        margin-top: 20px;
+    }
+
+        .workout-summary-actions button {
+            width: 100%;
+        }
+}

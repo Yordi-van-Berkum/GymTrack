@@ -1,4 +1,4 @@
-﻿@page "/Exercises/{MuscleGroupId:int}"
+﻿@page "/Exercises/{MuscleGroupId:int}/{WorkoutId:guid?}"
 
 <div class="page-container">
     <div class="pagetitle-back">
@@ -13,11 +13,11 @@
 
     @if (isLoading)
     {
-        <p>Loading exercises...</p>
+        <p class="status-message">Loading exercises...</p>
     }
     else if (!FilteredExercises.Any())
     {
-        <p>No exercises found!</p>
+        <p class="status-message">No exercises found!</p>
     }
     else
     {
@@ -44,9 +44,14 @@
 
 
 @code {
+    // Wanneer er een WorkoutId ontvangen is zijn we op deze pagina gekomen via de workouts pagina.
+    // Mocht er een WorkoutId mee gestuurd zijn dan zitten we in de WorkoutMode.
+    // Mocht er geen WorkoutId mee gestuurd zijn krijgen we gewoon de standaard pagina.
+    [Parameter] public Guid? WorkoutId { get; set; }
+    private bool WorkoutMode => WorkoutId.HasValue;
+
     // Hier wordt er opgeslagen wat je typt in de zoekbalk als string
     private string searchTerm = "";
-
 
     // Meegestuurde id vanuit de spiergroepen pagina
     [Parameter] public int MuscleGroupId { get; set; }
@@ -101,7 +106,17 @@
     // Navigeren naar de detail pagina van de oefening.
     private void ExerciseDetail(int exerciseId)
     {
-        Navigation.NavigateTo($"/ExerciseDetail/{exerciseId}");
+        // Als WorkoutMode actief is stuur je het id van de workout mee naar de detail pagina
+        // Vanuit daar kan je oefening toevoegen aan de meegestuurde workout.
+        if (WorkoutMode)
+        {
+            Navigation.NavigateTo($"/ExerciseDetail/{exerciseId}/{WorkoutId}");
+        }
+        // Anders navigeer je gewoon naar de standaard detail pagina.
+        else
+        {
+            Navigation.NavigateTo($"/ExerciseDetail/{exerciseId}");
+        }
     }
 
     // Annuleert lopende requests wanneer de component wordt verwijderd.

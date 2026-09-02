@@ -39,7 +39,21 @@
     line-height: 1.6;
 }
 
+.confirm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 250px 20px 20px;
+    background: rgba(2, 6, 23, 0.75);
+    backdrop-filter: blur(4px);
+}
+
+
 @media (max-width: 600px) {
+
     .exercise-detail-card {
         flex-direction: column;
         gap: 16px;

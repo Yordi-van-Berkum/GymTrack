@@ -1,0 +1,139 @@
+﻿@page "/Workouts"
+@implements IDisposable
+
+<div class="page-container">
+    <div class="pagetitle-back">
+        <BackButton />
+        <div class="pagetitle">Workouts</div>
+        <div class="action-buttons">
+            <button class="button-pageheader add-button" @onclick="CreateWorkout"> <i class="fa-solid fa-plus fa-w"></i> <span>New Workout</span></button>
+        </div>
+    </div>
+
+    <div class="search">
+        <i class="fa fa-search search-icon fa-fw"></i>
+        <input type="text" class="search-input" placeholder="Search..." @bind="searchTerm" @bind:event="oninput" />
+    </div>
+
+    @if (isLoading)
+    {
+        <p class="status-message">Loading workouts...</p>
+    }
+    else if (!myWorkouts.Any())
+    {
+        <p class="status-message">No workouts found.</p>
+    }
+    else
+    {
+        <div class="workout-container">
+            @foreach (var workout in FilteredMyWorkouts)
+            {
+                <div class="workout-card" @onclick="() => WorkoutDetail(workout.Id)">
+                    <div class="workout-icon-wrapper">
+                        <i class="@GetWorkoutIcon(workout.Type) workout-icon"></i>
+                    </div>
+
+                    <div class="workout-name">@workout.Name</div>
+
+                    <div class="workout-count">
+                        <span>@workout.ExerciseCount</span> exercises
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    // Hier wordt er opgeslagen wat je typt in de zoekbalk als string
+    private string searchTerm = "";
+
+    // Injecteren van benodigheden van de pagina
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private WorkoutsService WorkoutsService { get; set; } = default!;
+    [Inject] ToastService ToastService { get; set; } = default!;
+
+    // Boolean om pagina in te laden wanneer alles opgehaald is wordt die false en toont die de pagina
+    private bool isLoading;
+
+    // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    // Lijst met workouts
+    private List<Workout> myWorkouts = new();
+
+    // Aanroepen van de LoadAllDataAsync functie bij het inladen van de pagina.
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllDataAsync();
+    }
+
+    // Zorgt ervoor dat de pagina pas inlaad wanneer alle functie zijn aangeroepen.
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            await Task.WhenAll(
+                LoadMyWorkoutsAsync(_cancellationTokenSource.Token)
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd omdat de pagina is verlaten.
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // Ophalen van alle workouts van een gebruiker.
+    private async Task LoadMyWorkoutsAsync(CancellationToken cancellationToken)
+    {
+        myWorkouts = await WorkoutsService.GetMyWorkoutsAsync(cancellationToken);
+    }
+
+    private void CreateWorkout()
+    {
+        // Navigeert je naar de pagina om een workout aan te maken
+        Navigation.NavigateTo("/CreateAndUpdateWorkout");
+    }
+
+    private void WorkoutDetail(Guid workoutId)
+    {
+        // Navigeert je naar de Detail pagina van de gekozen workout.
+        Navigation.NavigateTo($"/WorkoutDetail/{workoutId}");
+    }
+
+
+    // Filter de lijst met workouts.
+    private IEnumerable<Workout> FilteredMyWorkouts =>
+        myWorkouts.Where(x =>
+            // Als er niks in de zoekbalk is ingevuld stuur alle oefeningen terug.
+            string.IsNullOrWhiteSpace(searchTerm) ||
+            // Als de zoekbalk wel is ingevuld filter de oefeningen met wat vergeleken is.
+            x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+        );
+
+    // Annuleert lopende requests wanneer de component wordt verwijderd.
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+
+    // Zorgt ervoor de het goede font awesome icoontje bij een bepaalde workout type komt.
+    private string GetWorkoutIcon(WorkoutType type)
+    {
+        return type switch
+        {
+            WorkoutType.Strength => "fa-solid fa-dumbbell strength-icon",
+            WorkoutType.Cardio => "fa-solid fa-heart-pulse cardio-icon",
+            WorkoutType.Mixed => "fa-solid fa-fire mixed-icon",
+            _ => "fa-solid fa-dumbbell"
+        };
+    }
+}

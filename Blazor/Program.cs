@@ -17,6 +17,7 @@ builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddScoped<ToastService>();
 builder.Services.AddScoped<ExercisesService>();
+builder.Services.AddScoped<WorkoutsService>();
 builder.Services.AddScoped<CustomAuthStateProvider>();
 builder.Services.AddScoped<SafeApiHelper>();
 
