@@ -205,5 +205,270 @@ namespace WebAPI.Services
             // Slaat de wijziging op.
             await _context.SaveChangesAsync(cancellationToken);
         }
+
+        // Start een nieuwe workout sessie voor de ingelogde gebruiker.
+        public async Task<WorkoutSessionDto> StartWorkoutAsync(Guid workoutId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Controleert of de workout bestaat en van de ingelogde gebruiker is.
+            var workoutExists = await _context.Workouts
+                .AnyAsync(w => w.Id == workoutId && w.UserId == userId,cancellationToken);
+
+            // De workout bestaat niet of behoort niet toe aan de gebruiker.
+            if (!workoutExists)
+                throw new NotFoundException("Workout not found.");
+
+            // Maakt een nieuwe workout sessie aan.
+            var workoutSession = new WorkoutSession
+            {
+                Id = Guid.NewGuid(),
+                WorkoutId = workoutId,
+                StartedAt = DateTime.UtcNow,
+                IsCompleted = false,
+                LastActivityAt = DateTime.UtcNow,
+            };
+
+            // Voegt de nieuwe workout sessie toe aan de database.
+            _context.WorkoutSessions.Add(workoutSession);
+
+            // Slaat de workout sessie op.
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Geeft de aangemaakte workout sessie terug naar de frontend.
+            return new WorkoutSessionDto
+            {
+                Id = workoutSession.Id,
+                WorkoutId = workoutSession.WorkoutId,
+                StartedAt = workoutSession.StartedAt
+            };
+        }
+
+        // Haalt alle oefeningen van een workout session op.
+        public async Task<List<ExerciseDto>> GetWorkoutExercisesAsync(Guid workoutSessionId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Controleert of de workout session bestaat en bij de ingelogde gebruiker hoort.
+            var workoutSession = await _context.WorkoutSessions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(ws => ws.Id == workoutSessionId && ws.Workout.UserId == userId, cancellationToken);
+
+            // De workout session bestaat niet of behoort niet toe aan de ingelogde gebruiker.
+            if (workoutSession is null)
+                throw new NotFoundException("Workout session not found.");
+
+            // Haalt alle oefeningen van de workout session op in de volgorde.
+            var exercises = await _context.WorkoutExercises
+                .AsNoTracking()
+                .Where(wse => wse.WorkoutId == workoutSession.WorkoutId)
+                .OrderBy(wse => wse.SortOrder)
+                .Select(wse => new ExerciseDto
+                {
+                    Id = wse.Exercise.Id,
+                    Name = wse.Exercise.Name,
+                    ImageUrl = wse.Exercise.ImageUrl
+                })
+                .ToListAsync(cancellationToken);
+
+            // Geeft de oefeningen terug.
+            return exercises;
+        }
+
+        public async Task<Guid> AddWorkoutSessionExerciseAsync(WorkoutSessionExerciseDto workoutSessionExerciseDto, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Controleert of de workout session bestaat en bij de ingelogde gebruiker hoort.
+            var workoutSession = await _context.WorkoutSessions
+                .FirstOrDefaultAsync(ws => ws.Id == workoutSessionExerciseDto.WorkoutSessionId && ws.Workout.UserId == userId, cancellationToken);
+
+            // De workout session bestaat niet of behoort niet toe aan de ingelogde gebruiker.
+            if (workoutSession is null)
+                throw new NotFoundException("Workout session not found.");
+
+            // Controleert of de oefening bestaat.
+            var exerciseExists = await _context.Exercises
+                .AnyAsync(e => e.Id == workoutSessionExerciseDto.ExerciseId, cancellationToken);
+
+            // De oefening bestaat niet.
+            if (!exerciseExists)
+                throw new NotFoundException("Exercise not found.");
+
+            // Controleert of deze oefening al aan deze workout session is toegevoegd.
+            // Hierdoor voorkomen we dat dezelfde oefening meerdere keren aan dezelfde sessie wordt gekoppeld.
+            var alreadyExists = await _context.WorkoutSessionExercises
+                .AnyAsync(wse => wse.WorkoutSessionId == workoutSession.Id && wse.ExerciseId == workoutSessionExerciseDto.ExerciseId, cancellationToken);
+
+            // De oefening is al onderdeel van deze workout session.
+            if (alreadyExists)
+                throw new ConflictException("Exercise already added to workout session.");
+
+            // Maakt een nieuwe koppeling aan tussen de workout session en de oefening.
+            var workoutSessionExercise = new WorkoutSessionExercise
+            {
+                Id = Guid.NewGuid(),
+                WorkoutSessionId = workoutSessionExerciseDto.WorkoutSessionId,
+                ExerciseId = workoutSessionExerciseDto.ExerciseId
+            };
+
+            // Voegt de nieuwe workout session exercise toe aan de database.
+            _context.WorkoutSessionExercises.Add(workoutSessionExercise);
+
+            // Slaat de nieuwe workout session exercise op in de database.
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // Geeft het ID van de aangemaakte WorkoutSessionExercise terug.
+            return workoutSessionExercise.Id;
+        }
+
+        public async Task AddWorkoutSetAsync(WorkoutSetDto workoutSetDto, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Haalt de workout session exercise op en controleert of deze bij de ingelogde gebruiker hoort.
+            var workoutSessionExercise = await _context.WorkoutSessionExercises
+                .Include(wse => wse.WorkoutSession)
+                .ThenInclude(ws => ws.Workout)
+                .FirstOrDefaultAsync(wse => wse.Id == workoutSetDto.WorkoutSessionExerciseId && wse.WorkoutSession.Workout.UserId == userId, cancellationToken);
+
+            // De workout session exercise bestaat niet of hoort niet bij de ingelogde gebruiker.
+            if (workoutSessionExercise is null)
+                throw new NotFoundException("Workout session exercise not found.");
+
+            // Maakt een nieuw WorkoutSet object aan.
+            var workoutSet = new WorkoutSet
+            {
+                Id = Guid.NewGuid(),
+                WorkoutSessionExerciseId = workoutSetDto.WorkoutSessionExerciseId,
+                SetNumber = workoutSetDto.SetNumber,
+                Weight = workoutSetDto.Weight,
+                Reps = workoutSetDto.Reps
+            };
+
+            // Voegt de nieuwe set toe aan de database.
+            _context.WorkoutSets.Add(workoutSet);
+
+            // Werkt het tijdstip van de laatste activiteit van de workout session bij.
+            // Dit zorgt ervoor dat hij weet dat je er nog mee bezig bent en niet hoeft te verwijderen na een bepaalde tijd.
+            workoutSessionExercise.WorkoutSession.LastActivityAt = DateTime.UtcNow;
+
+            // Slaat de nieuwe set op in de database.
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        // Haalt de workout summary op van een workout session.
+        public async Task<WorkoutSummaryDto> GetWorkoutSummaryAsync(Guid workoutSessionId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Haalt de workout session met de workout, oefeningen en sets op.
+            var workoutSession = await _context.WorkoutSessions
+                .Include(ws => ws.Workout)
+                .Include(ws => ws.Exercises)
+                    .ThenInclude(wse => wse.Exercise)
+                .Include(ws => ws.Exercises)
+                    .ThenInclude(wse => wse.Sets)
+                .FirstOrDefaultAsync(ws => ws.Id == workoutSessionId && ws.Workout.UserId == userId, cancellationToken);
+
+            // Controleert of de workout session bestaat.
+            if (workoutSession is null)
+                throw new NotFoundException("Workout session not found.");
+
+            // Maakt de WorkoutSummaryDto aan.
+            var summary = new WorkoutSummaryDto
+            {
+                WorkoutSessionId = workoutSession.Id,
+                WorkoutName = workoutSession.Workout.Name,
+                Date = workoutSession.StartedAt,
+            };
+
+            // Loopt door alle oefeningen van de workout session.
+            foreach (var sessionExercise in workoutSession.Exercises)
+            {
+                // Maakt de WorkoutSummaryExerciseDto van de huidige oefening.
+                var exerciseSummary = new WorkoutSummaryExerciseDto
+                {
+                    ExerciseName = sessionExercise.Exercise.Name
+                };
+
+                // Loopt door alle sets van de huidige oefening.
+                foreach (var set in sessionExercise.Sets.OrderBy(s => s.SetNumber))
+                {
+                    // Voegt de set toe aan de oefening.
+                    exerciseSummary.Sets.Add(new WorkoutSummarySetDto
+                    {
+                        SetNumber = set.SetNumber,
+                        Weight = set.Weight,
+                        Reps = set.Reps
+                    });
+                }
+
+                // Voegt de oefening toe aan de workout summary.
+                summary.Exercises.Add(exerciseSummary);
+            }
+
+            // Geeft de complete workout summary terug.
+            return summary;
+        }
+
+        // Rondt een workout session af.
+        public async Task CompleteWorkoutSessionAsync(Guid workoutSessionId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Haalt de workout session op en controleert of deze van de ingelogde gebruiker is.
+            var workoutSession = await _context.WorkoutSessions
+                .FirstOrDefaultAsync(ws => ws.Id == workoutSessionId && ws.Workout.UserId == userId, cancellationToken);
+
+            // De workout session bestaat niet of behoort niet toe aan de ingelogde gebruiker.
+            if (workoutSession is null)
+                throw new NotFoundException("Workout session not found.");
+
+            // Geeft aan dat de workout volledig is afgerond.
+            workoutSession.IsCompleted = true;
+
+            // Werkt het tijdstip van de laatste activiteit van de workout session bij.
+            workoutSession.LastActivityAt = DateTime.UtcNow;
+
+            // Slaat de wijziging op in de database.
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        // Verwijderen van de workout sessie en de oefeningen en sets die aan deze sessie hangen.
+        // Deze delete wordt gebruikt wanneer cancellationToken gebruikt wordt.
+        public async Task DeleteWorkoutSessionAsync(Guid workoutSessionId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Haalt de workout session op en controleert of deze van de ingelogde gebruiker is.
+            var workoutSession = await _context.WorkoutSessions
+                .FirstOrDefaultAsync(ws => ws.Id == workoutSessionId &&  ws.Workout.UserId == userId, cancellationToken);
+
+            // De workout session bestaat niet of behoort niet toe aan de gebruiker.
+            if (workoutSession is null)
+                throw new NotFoundException("Workout session not found.");
+
+            // Verwijdert de workout session.
+            // De gekoppelde exercises en sets worden verwijderd via de cascade-relatie
+            _context.WorkoutSessions.Remove(workoutSession);
+
+            // Slaat de wijzigingen op.
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        // Verwijdert onafgemaakte workout sessies die te lang niet actief zijn geweest.
+        // Deze delete wordt gebruikt wanneer een gebruiker de pagina volledig afsluit en cancellationToken niet gebruikt kan worden.
+        public async Task DeleteInactiveWorkoutSessionsAsync(CancellationToken cancellationToken = default)
+        {
+            // Bepaalt de tijd waarop een workout session als inactief wordt beschouwd.
+            var inactiveSince = DateTime.UtcNow.AddHours(-1);
+
+            // Haalt alle onafgemaakte workout sessies op die langer dan één uur niet actief zijn geweest.
+            var inactiveWorkoutSessions = await _context.WorkoutSessions
+                .Where(ws => !ws.IsCompleted && ws.LastActivityAt < inactiveSince)
+                .ToListAsync(cancellationToken);
+
+            // Verwijdert de gevonden inactieve workout sessies.
+            _context.WorkoutSessions.RemoveRange(inactiveWorkoutSessions);
+
+            // Slaat de wijzigingen op in de database.
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        // Controleert of een workout session nog bestaat.
+        public async Task<bool> WorkoutSessionExistsAsync(Guid workoutSessionId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Controleert of de workout session bestaat en van de ingelogde gebruiker is.
+            return await _context.WorkoutSessions.AnyAsync(ws => ws.Id == workoutSessionId && ws.Workout.UserId == userId, cancellationToken);
+        }
+
+
     }
 }

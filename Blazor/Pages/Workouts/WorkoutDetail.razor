@@ -15,6 +15,7 @@
             <BackButton />
             <div class="pagetitle">@myWorkout.Name</div>
             <div class="action-buttons">
+                <button class="button-pageheader start-button" @onclick="StartWorkout" disabled="@isStartingWorkout"> <i class="fa-solid fa-play"></i><span>@(isStartingWorkout ? "Starting..." : "Start Workout")</span></button>
                 <button class="button-pageheader update-button" @onclick="() => NavigateToUpdateToWorkout()"> <i class="fa-solid fa-pen-to-square"></i> <span>Update Workout</span></button>
                 <button class="button-pageheader delete-button" @onclick="() => OpenConfirmDeleteWorkoutPopup()"> <i class="fa-solid fa-x"></i> <span>Delete Workout</span></button>
                 <button class="button-pageheader add-button" @onclick="NavigateToAddExerciseToWorkout"> <i class="fa-solid fa-plus"></i><span>Add Exercise</span></button>
@@ -70,9 +71,12 @@
     // Boolean om confirm popup te tonen
     private bool showConfirmDeleteWorkoutPopup = false;
 
-
     // Boolean zorgt ervoor dat wanneer je op de knop klikt om de workout te verwijderen dat deze knop inactief wordt.
     private bool isDeletingWorkout;
+
+
+    // Boolean zorgt ervoor dat wanneer je op de knop klikt om de workout te starten dat deze knop inactief wordt.
+    private bool isStartingWorkout;
 
     // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
     private readonly CancellationTokenSource _cancellationTokenSource = new();
@@ -178,6 +182,43 @@
     private void NavigateToUpdateToWorkout()
     {
         Navigation.NavigateTo($"/CreateAndUpdateWorkout/{WorkoutId}");
+    }
+
+    // Starten van de workou
+    private async Task StartWorkout()
+    {
+        // Voorkomt dat er meerdere start requests tegelijk worden verstuurd.
+        if (isStartingWorkout)
+            return;
+
+        try
+        {
+            // Maakt de start knop weer inactief.
+            isStartingWorkout = true;
+
+            // Aanmaken van de workout sessie. En krijgt de workout sessie meteen terug.
+            var workoutSession = await WorkoutsService.StartWorkoutAsync(WorkoutId, _cancellationTokenSource.Token);
+
+            // Toont de toast wanneer de workout sessie succesvol aangemaakt is.
+            ToastService.ShowToast("Workout started!", ToastLevel.Success);
+
+            // Navigeren naar de aangemaakte workout sessie.
+            Navigation.NavigateTo($"/WorkoutSession/{workoutSession.Id}");
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd omdat de pagina wordt verlaten.
+        }
+        catch (Exception ex)
+        {
+            // Toon een foutmelding wanneer er iets fout is gegaan.
+            ToastService.ShowToast(ex.Message, ToastLevel.Error);
+        }
+        finally
+        {
+            // Maakt de start knop weer actief.
+            isStartingWorkout = false;
+        }
     }
 
 

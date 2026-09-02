@@ -6,6 +6,7 @@ using System.Text;
 using WebAPI.Models.Auth;
 using WebAPI.Services;
 using WebAPI.Middleware;
+using WebAPI.BackgroundServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -96,6 +97,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IExercisesService, ExercisesService>();
 builder.Services.AddScoped<IWorkoutsService, WorkoutsService>();
+builder.Services.AddHostedService<WorkoutSessionCleanupService>();
 
 
 // Registreert controllers.

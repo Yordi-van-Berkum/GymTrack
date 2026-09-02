@@ -133,6 +133,16 @@ body {
     color: #7bd3aa;
 }
 
+.start-button i {
+    color: #f59e0b;
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.start-button:hover i {
+    color: #fbbf24;
+}
+
 .search {
     position: relative;
     width: 100%;

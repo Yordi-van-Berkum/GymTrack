@@ -1,0 +1,328 @@
+﻿@page "/WorkoutSession/{WorkoutSessionId:guid}"
+@implements IAsyncDisposable
+
+<div class="page-container">
+
+    @if (isLoading)
+    {
+        <p class="status-message">Loading workout...</p>
+    }
+    else if (currentExercise is null)
+    {
+        <p class="status-message">No exercises found.</p>
+    }
+    else
+    {
+        <div class="pagetitle-back">
+            <BackButton />
+            <div class="pagetitle">Workout</div>
+        </div>
+
+        <div class="workoutsession-layout">
+
+            <div class="workoutsession-card">
+
+                <div class="workoutsession-exercise-content">
+
+                    <div class="workoutsession-exercise-name">@currentExercise.Name</div>
+
+                    <EditForm Model="@newSet" OnValidSubmit="AddSet">
+                        <DataAnnotationsValidator />
+
+                        <div class="workoutsession-form">
+
+                            <div class="workoutsession-form-group">
+                                <label class="workoutsession-label">Weight (kg)</label>
+                                <InputNumber class="workoutsession-input" @bind-Value="newSet.Weight" />
+                                <ValidationMessage For="@(() => newSet.Weight)" class="workoutsession-validation" />
+                            </div>
+
+                            <div class="workoutsession-form-group">
+                                <label class="workoutsession-label">Reps</label>
+                                <InputNumber class="workoutsession-input" @bind-Value="newSet.Reps" />
+                                <ValidationMessage For="@(() => newSet.Reps)" class="workoutsession-validation" />
+                            </div>
+
+                            <button type="submit" class="button-pageheader add-button workoutsession-add-button" disabled="@isAddingSet"> <i class="fa-solid fa-plus"></i> <span>@(isAddingSet ? "Adding..." : "Add Set")</span> </button>
+
+                        </div>
+                    </EditForm>
+
+                </div>
+
+            </div>
+
+            <div class="workoutsession-card">
+
+                <div class="workoutsession-sets-content">
+
+                    <div class="workoutsession-sets-title">
+                        Added Sets
+                    </div>
+
+                    @if (sets.Any())
+                    {
+                        <div class="workoutsession-set-list">
+
+                            @foreach (var set in sets)
+                            {
+                                <div class="workoutsession-set-item">
+                                    <span>Set @set.SetNumber</span>
+                                    <span>@set.Weight kg × @set.Reps reps</span>
+                                </div>
+                            }
+
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="status-message">No sets added yet!</p>
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="workoutsession-actions">
+
+            @if (currentExerciseIndex < workoutExercises.Count - 1)
+            {
+                <button class="button-pageheader add-button" @onclick="NextExercise"> <i class="fa-solid fa-arrow-right"></i> <span>Next Exercise</span> </button>
+            }
+            else
+            {
+                <button class="button-pageheader update-button" @onclick="FinishWorkout"> <i class="fa-solid fa-check"></i><span>Finish Workout</span> </button>
+            }
+
+        </div>
+    }
+</div>
+
+@code {
+    // Het ID van de aangemaakte sessie wanneer je een workout start.
+    [Parameter]
+    public Guid WorkoutSessionId { get; set; }
+
+    // Lijst met alle oefeningen van de workout.
+    private List<Exercise> workoutExercises = new();
+
+    // De oefening die momenteel wordt uitgevoerd.
+    private Exercise? currentExercise;
+
+    // Houdt bij welke oefening momenteel actief is.
+    private int currentExerciseIndex;
+
+    // Bool dat aangeeft of de workout afgerond is of niet.
+    private bool workoutFinished;
+
+    // Geeft aan of de pagina nog bezig is met laden.
+    private bool isLoading;
+
+    // Geeft aan of er momenteel een set wordt toegevoegd.
+    private bool isAddingSet;
+
+    // Geeft aan of de workout session nog bestaat.
+    private bool workoutSessionExists = true;
+
+    // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private CancellationToken cancellationToken => _cancellationTokenSource.Token;
+
+    // Benodigde services.
+    [Inject] private WorkoutsService WorkoutsService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private ToastService ToastService { get; set; } = default!;
+
+
+    // Houdt het ID van de huidige WorkoutSessionExercise bij.
+    private Guid currentWorkoutSessionExerciseId;
+
+    // Houdt de tijdelijk ingevoerde set bij.
+    private WorkoutSetDto newSet = new();
+
+    // Houdt de toegevoegde sets van de huidige oefening bij.
+    private List<WorkoutSetDto> sets = new();
+
+
+    // Wordt uitgevoerd wanneer de pagina wordt geladen.
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllDataAsync();
+        _ = CheckWorkoutSessionAsync();
+    }
+
+    // Controleert periodiek of de workout session nog bestaat.
+    private async Task CheckWorkoutSessionAsync()
+    {
+        // Blijft loopen tot dat de pagina verlaten wordt en de workout niet afgerond is.
+        while (!cancellationToken.IsCancellationRequested && !workoutFinished)
+        {
+            // Wacht 1 minuut voordat de workout session opnieuw wordt gecontroleerd.
+            await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
+
+            // Controleert of de workout session nog bestaat.
+            workoutSessionExists = await WorkoutsService.WorkoutSessionExistsAsync(WorkoutSessionId, cancellationToken);
+
+            // De workout session bestaat niet meer.
+            if (!workoutSessionExists)
+            {
+                // Voorkomt dat DisposeAsync probeert de al verwijderde workout session opnieuw te verwijderen.
+                workoutFinished = true;
+
+                // Geeft de gebruiker een melding dat de workout te lang inactief is geweest.
+                ToastService.ShowToast("Workout session expired due to inactivity!", ToastLevel.Error);
+
+                // Stuurt de gebruiker terug naar de workouts pagina.
+                Navigation.NavigateTo("/Workouts");
+
+                return;
+            }
+        }
+    }
+
+
+    // Zorgt ervoor dat de pagina pas inlaad wanneer alle functie zijn aangeroepen.
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            await Task.WhenAll(
+            LoadWorkoutAsync(_cancellationTokenSource.Token)
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd omdat de pagina is verlaten.
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    // Haalt de oefeningen van de workout op.
+    private async Task LoadWorkoutAsync(CancellationToken cancellationToken)
+    {
+        workoutExercises = await WorkoutsService.GetWorkoutExercisesAsync(WorkoutSessionId, cancellationToken);
+
+        // Zet de huidige oefening op de eerste oefening van de lijst.
+        currentExerciseIndex = 0;
+
+        // Controleert of de workout minimaal één oefening bevat.
+        if (workoutExercises.Count > 0)
+        {
+            // Stelt de eerste oefening in als de huidige oefening.
+            currentExercise = workoutExercises[currentExerciseIndex];
+
+            // Voegt de eerste oefening toe aan de actieve workout session.
+            await AddCurrentExerciseToSessionAsync();
+        }
+    }
+
+    // Voegt de huidige oefening toe aan de actieve workout session.
+    private async Task AddCurrentExerciseToSessionAsync()
+    {
+        // Controleert of er een huidige oefening beschikbaar is.
+        if (currentExercise is null)
+            return;
+
+        // Maakt een WorkoutSessionExercise aan voor de huidige oefening en bewaart het Id.
+        currentWorkoutSessionExerciseId = await WorkoutsService.AddWorkoutSessionExerciseAsync(WorkoutSessionId, currentExercise.Id, cancellationToken);
+
+        // Maakt de lijst met sets leeg voor de nieuwe oefening.
+        sets = new();
+
+        // Reset de tijdelijk ingevoerde set voor de nieuwe oefening.
+        newSet = new();
+    }
+
+
+    // Gaat naar de volgende oefening.
+    private async Task NextExercise()
+    {
+        // Controleert of de huidige oefening al de laatste oefening van de workout is.
+        if (currentExerciseIndex >= workoutExercises.Count - 1)
+            return;
+
+        // Verhoogt de index zodat de volgende oefening actief wordt.
+        currentExerciseIndex++;
+
+        // Stelt de volgende oefening in als de huidige oefening.
+        currentExercise = workoutExercises[currentExerciseIndex];
+
+        // Voegt de nieuwe huidige oefening toe aan de actieve workout session.
+        await AddCurrentExerciseToSessionAsync();
+    }
+
+    // Voegt een nieuwe set toe aan de huidige oefening.
+    private async Task AddSet()
+    {
+        // Controleert of er al een set wordt toegevoegd.
+        // Voorkomt dat dezelfde set meerdere keren wordt toegevoegd.
+        if (isAddingSet)
+            return;
+
+        // Zorgt ervoor dat de Add Set knop tijdens het toevoegen wordt uitgeschakeld.
+        isAddingSet = true;
+
+        try
+        {
+            // Bepaalt het nummer van de nieuwe set.
+            var setNumber = sets.Count + 1;
+
+            // Voegt de nieuwe set toe aan de huidige workout oefening.
+            await WorkoutsService.AddWorkoutSetAsync(currentWorkoutSessionExerciseId, setNumber, newSet.Weight, newSet.Reps, cancellationToken);
+
+            // Voegt de set lokaal toe zodat deze direct zichtbaar wordt op de pagina.
+            sets.Add(new WorkoutSetDto
+            {
+                WorkoutSessionExerciseId = currentWorkoutSessionExerciseId,
+                SetNumber = setNumber,
+                Weight = newSet.Weight,
+                Reps = newSet.Reps
+            });
+
+            // Maakt het model leeg voor de volgende set.
+            newSet = new WorkoutSetDto();
+        }
+        finally
+        {
+            // Zorgt ervoor dat de Add Set knop weer actief wordt nadat het toevoegen is voltooid.
+            isAddingSet = false;
+        }
+    }
+
+
+    // Rondt de workout af en navigeert naar de workout summary pagina.
+    private async Task FinishWorkout()
+    {
+        // Rondt de workout session af in de backend.
+        await WorkoutsService.CompleteWorkoutSessionAsync(WorkoutSessionId);
+
+        // Zorgt ervoor dat de boolean true wordt.
+        // Dit betekent dat de workout afgerond is en niet verwijderd wanneer de requests geannuleerd worden.
+        workoutFinished = true;
+
+        Navigation.NavigateTo($"/WorkoutSummary/{WorkoutSessionId}");
+    }
+
+
+    // Annuleert lopende requests wanneer de component wordt verwijderd.
+    public async ValueTask DisposeAsync()
+    {
+        // Wanneer een request geannuleerd wordt en workout nog niet afgerond is.
+        // Wordt de workout sessie met alle toegevoegde oefeningen en sets verwijderd.
+        if (!workoutFinished)
+        {
+            await WorkoutsService.DeleteWorkoutSessionAsync(WorkoutSessionId);
+        }
+
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+}

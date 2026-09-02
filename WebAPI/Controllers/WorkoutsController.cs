@@ -133,7 +133,7 @@ namespace WebAPI.Controllers
         [HttpPost("deleteexercisefromworkout")]
         public async Task<IActionResult> DeleteExerciseFromWorkout([FromBody] WorkoutExerciseDto exerciseWorkoutDto, CancellationToken cancellationToken)
         {
-            // Haalt de ID van de ingelogde gebruiker uit de claims.
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
             if (!User.TryGetUserId(out var userId))
                 return Unauthorized("Invalid user.");
 
@@ -142,6 +142,124 @@ namespace WebAPI.Controllers
 
             // Geeft een succesvolle response terug wanneer de oefening verwijderd is.
             return Ok("Exercise removed from workout!");
+        }
+
+        [HttpPost("startworkout/{workoutId:guid}")]
+        public async Task<IActionResult> StartWorkout(Guid workoutId, CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Start een nieuwe workout sessie voor de ingelogde gebruiker.
+            var workoutSession = await _workoutsService.StartWorkoutAsync(workoutId, userId, cancellationToken);
+
+            // Geeft de aangemaakte workout sessie terug naar de frontend.
+            return Ok(workoutSession);
+        }
+
+        [HttpGet("getexercises/{workoutSessionId:guid}")]
+        public async Task<IActionResult> GetWorkoutExercises(Guid workoutSessionId, CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Haalt de oefeningen van de workout sessie op.
+            var exercises = await _workoutsService.GetWorkoutExercisesAsync(workoutSessionId, userId, cancellationToken);
+
+            // Geeft de oefeningen terug.
+            return Ok(exercises);
+        }
+
+        [HttpPost("addworkoutsessionexercise")]
+        public async Task<IActionResult> AddWorkoutSessionExercise([FromBody] WorkoutSessionExerciseDto workoutSessionExerciseDto, CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Maakt de WorkoutSessionExercise aan en ontvangt het nieuwe ID.
+            var workoutSessionExerciseId = await _workoutsService.AddWorkoutSessionExerciseAsync(workoutSessionExerciseDto, userId, cancellationToken);
+
+            // Geeft het ID van de aangemaakte WorkoutSessionExercise terug.
+            return Ok(workoutSessionExerciseId);
+        }
+
+        // Voegt een nieuwe set toe aan de huidige workout session exercise.
+        [HttpPost("addworkoutset")]
+        public async Task<IActionResult> AddWorkoutSet([FromBody] WorkoutSetDto workoutSetDto, CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Voegt de set toe aan de WorkoutSessionExercise van de ingelogde gebruiker.
+            await _workoutsService.AddWorkoutSetAsync(workoutSetDto, userId,cancellationToken);
+
+            // Geeft een succesvolle response terug wanneer de set is toegevoegd.
+            return Ok("Workout set added!");
+        }
+
+        // Haalt de workout summary op van een workout session.
+        [HttpGet("summary/{workoutSessionId:guid}")]
+        public async Task<IActionResult> GetWorkoutSummary(Guid workoutSessionId, CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID op.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Haalt de workout summary op via de workout service.
+            var summary = await _workoutsService.GetWorkoutSummaryAsync(workoutSessionId, userId, cancellationToken);
+
+            // Geeft de workout summary terug naar de frontend.
+            return Ok(summary);
+        }
+
+        // Rondt de workout session af.
+        [HttpPost("completeworkoutsession/{workoutSessionId:guid}")]
+        public async Task<IActionResult> CompleteWorkoutSession(Guid workoutSessionId, CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Rondt de workout session af van de ingelogde gebruiker.
+            await _workoutsService.CompleteWorkoutSessionAsync(workoutSessionId, userId, cancellationToken);
+
+            // Geeft een succesvolle response terug wanneer de workout session is afgerond.
+            return Ok("Workout session completed!");
+        }
+
+        // Verwijdert een workout session en de bijbehorende oefeningen en sets die aan deze oefeninge hangen.
+        [HttpDelete("deleteworkoutsession/{workoutSessionId:guid}")]
+        public async Task<IActionResult> DeleteWorkoutSession(Guid workoutSessionId, CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Verwijdert de workout session van de ingelogde gebruiker.
+            // De gekoppelde oefeningen en sets worden via cascade delete verwijderd.
+            await _workoutsService.DeleteWorkoutSessionAsync(workoutSessionId, userId, cancellationToken);
+
+            // Geeft een succesvolle response terug wanneer de workout session is verwijderd.
+            return Ok("Workout session deleted successfully!");
+        }
+
+        // Controleert of een workout session nog bestaat.
+        [HttpGet("workoutsessionexists/{workoutSessionId:guid}")]
+        public async Task<IActionResult> WorkoutSessionExists(Guid workoutSessionId, CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Controleert of de workout session bestaat en van de ingelogde gebruiker is.
+            var exists = await _workoutsService.WorkoutSessionExistsAsync(workoutSessionId, userId, cancellationToken);
+
+            // Geeft terug of de workout session bestaat.
+            return Ok(exists);
         }
     }
 }
