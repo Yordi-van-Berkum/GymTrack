@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
-using WebAPI.Models;
 using WebAPI.Models.Auth;
 using WebAPI.Models.Exercises;
+using WebAPI.Models.Planning;
 using WebAPI.Models.Workout;
 
 namespace WebAPI.Services
@@ -22,6 +21,7 @@ namespace WebAPI.Services
 
         public DbSet<Workout> Workouts { get; set; }
 
+        public DbSet<WeekPlanning> Planning { get; set; }
         public DbSet<WorkoutExercise> WorkoutExercises { get; set; }
         public DbSet<WorkoutSession> WorkoutSessions { get; set; }
         public DbSet<WorkoutSessionExercise> WorkoutSessionExercises { get; set; }

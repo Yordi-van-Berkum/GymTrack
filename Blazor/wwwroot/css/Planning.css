@@ -1,0 +1,117 @@
+﻿.planning-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+.planning-day-card {
+    width: 100%;
+    min-height: 64px;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    display: grid;
+    grid-template-columns: 140px 1fr auto;
+    align-items: center;
+    gap: 20px;
+    background: #020617;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+
+.planning-day-name {
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+
+.planning-workout {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    color: #e2e8f0;
+    font-size: 15px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    font-weight: 700;
+}
+
+
+    .planning-workout:hover {
+        border-color: rgba(122, 123, 255, 0.5);
+        box-shadow: 0 8px 25px rgba(122, 123, 255, 0.35);
+    }
+
+
+.planning-workout-empty {
+    color: #94a3b8;
+    cursor: default;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+
+    .planning-workout-empty:hover {
+        border-color: rgba(255,255,255,0.08);
+        box-shadow: none;
+    }
+
+
+.planning-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+
+    .planning-actions button {
+        min-width: 160px;
+    }
+
+
+@media (max-width: 900px) {
+
+    .planning-day-card {
+        grid-template-columns: 120px 1fr auto;
+        gap: 15px;
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .planning-day-card {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 14px;
+    }
+
+
+    .planning-day-name {
+        font-size: 18px;
+    }
+
+
+    .planning-workout {
+        width: 100%;
+    }
+
+
+    .planning-actions {
+        width: 100%;
+    }
+
+
+        .planning-actions button {
+            width: 100%;
+        }
+}

@@ -15,13 +15,13 @@
 
                 <div class="create-update-workout-form-group">
                     <label>Workout Name</label>
-                <InputText class="create-update-workout-form-control" @bind-Value="workoutDto.Name" />
-                <ValidationMessage For="@(() => workoutDto.Name)" />
+                    <InputText class="create-update-workout-form-control" @bind-Value="workoutDto.Name" />
+                    <ValidationMessage For="@(() => workoutDto.Name)" />
                 </div>
 
                 <div class="create-update-workout-form-group">
                     <label>Workout Type</label>
-                <InputSelect class="create-update-workout-form-control" @bind-Value="workoutDto.Type">
+                    <InputSelect class="create-update-workout-form-control" @bind-Value="workoutDto.Type">
                         @foreach (var workoutType in Enum.GetValues<WorkoutType>())
                         {
                             <option value="@workoutType">@workoutType</option>
@@ -30,8 +30,7 @@
                     <ValidationMessage For="@(() => workoutDto.Type)" />
                 </div>
 
-            <button type="submit" class="submit-workout-btn" disabled="@isSubmitting" <i class="fa-solid @(UpdateWorkoutMode ? "fa-pen-to-square update-icon" : "fa-plus")"></i>  @(isSubmitting ? (UpdateWorkoutMode ? "Updating..." : "Creating...") : (UpdateWorkoutMode ? "Update Workout" : "Create Workout"))</button>
-
+                <button type="submit" class="submit-workout-btn" disabled="@isSubmitting" <i class="fa-solid @(UpdateWorkoutMode ? "fa-pen-to-square update-icon" : "fa-plus")"></i>  @(isSubmitting ? (UpdateWorkoutMode ? "Updating..." : "Creating...") : (UpdateWorkoutMode ? "Update Workout" : "Create Workout"))</button>
             </EditForm>
      </div>
 </div>

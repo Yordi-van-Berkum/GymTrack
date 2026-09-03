@@ -47,6 +47,8 @@
 
     .confirm-modal-btn:hover {
         transform: translateY(-3px) scale(1.02);
+        border-color: rgba(122, 123, 255, 0.5);
+        box-shadow: 0 8px 25px rgba(122, 123, 255, 0.35);
     }
 
 .delete-button i {
