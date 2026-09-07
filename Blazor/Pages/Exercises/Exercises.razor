@@ -25,15 +25,8 @@
             @foreach (var exercise in FilteredExercises)
             {
                 <div class="exercise-card" @onclick="() => ExerciseDetail(exercise.Id)">
-                    <div class="exercise-image-wrapper">
-                        <img src="@($"/Images/Exercises/{exercise.ImageUrl}")"
-                             alt="@exercise.Name"
-                             class="exercise-image" />
-                    </div>
-
-                    <div class="exercise-name">
-                        @exercise.Name
-                    </div>
+                    <div class="exercise-image-wrapper"> <img src="@($"/Images/Exercises/{exercise.ImageUrl}")" alt="@exercise.Name" class="exercise-image" /> </div>
+                    <div class="exercise-name"> @exercise.Name </div>
                 </div>
             }
         </div>

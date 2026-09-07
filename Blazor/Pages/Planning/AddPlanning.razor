@@ -1,0 +1,244 @@
+﻿@page "/AddDayPlanning/{Day}"
+
+<div class="page-container">
+
+    <div class="pagetitle-back">
+        <BackButton />
+        <div class="pagetitle">Add Workout To @Day</div>
+    </div>
+
+    <div class="search">
+        <i class="fa fa-search search-icon fa-fw"></i>
+        <input type="text" class="search-input" placeholder="Search..." @bind="searchTerm" @bind:event="oninput" />
+    </div>
+
+    @if (isLoading)
+    {
+        <p class="status-message">Loading workouts...</p>
+    }
+    else if (!myWorkouts.Any())
+    {
+        <p class="status-message">No workouts found.</p>
+    }
+    else
+    {
+        <div class="workout-container">
+            @foreach (var workout in FilteredMyWorkouts)
+            {
+                <div class="workout-card" @onclick="() => OpenConfirmAddWorkoutToPlanningPopup(workout)">
+                    <div class="workout-icon-wrapper"> <i class="@GetWorkoutIcon(workout.Type) workout-icon"></i> </div>
+
+                    <div class="workout-name">@workout.Name</div>
+
+                    <div class="workout-count"> <span>@workout.ExerciseCount</span> exercises</div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+
+@if (showConfirmAddWorkoutToPlanningPopup)
+{
+    <div class="confirm-modal-overlay">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-title">Add <span>@selectedWorkoutName</span> To <span>@Day</span> </div>
+
+            <div class="confirm-modal-actions">
+                <button class="confirm-modal-btn confirm-modal-btn-cancel" @onclick="ClosePopup" disabled="@isAddingWorkout"><i class="fa-solid fa-x"></i>Cancel</button>
+                <button class="confirm-modal-btn confirm-modal-btn-confirm" @onclick="ConfirmAddWorkoutToPlanning" disabled="@isAddingWorkout"><i class="fa-solid fa-plus"></i>Confirm</button>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+
+    // Hier wordt er opgeslagen wat je typt in de zoekbalk als string.
+    private string searchTerm = "";
+
+
+    // De dag die vanuit de planning pagina wordt meegestuurd.
+    [Parameter]
+    public string? Day { get; set; }
+
+
+    // De dag waarop de workout toegevoegd wordt.
+    private DayOfWeek SelectedDay;
+
+
+    // Boolean om confirm popup te tonen.
+    private bool showConfirmAddWorkoutToPlanningPopup;
+
+
+    // Het id van de geselecteerde workout om toe te voegen aan de planning.
+    private Guid selectedWorkoutId;
+
+
+    // De naam van de geselecteerde workout om te laten zien in de popup.
+    private string selectedWorkoutName = "";
+
+    // Boolean zorgt ervoor dat wanneer je op de knop klikt om de workout toe te voegen dat deze knop inactief wordt.
+    private bool isAddingWorkout;
+
+    // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private CancellationToken cancellationToken => _cancellationTokenSource.Token;
+
+    // Injecteren van benodigheden van de pagina.
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private PlanningService PlanningService { get; set; } = default!;
+    [Inject] private WorkoutsService WorkoutsService { get; set; } = default!;
+    [Inject] private ToastService ToastService { get; set; } = default!;
+
+    // Geeft aan of de pagina nog bezig is met laden.
+    private bool isLoading;
+
+    // Lijst met workouts.
+    private List<Workout> myWorkouts = new();
+
+    // Wordt uitgevoerd wanneer de pagina wordt geladen.
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllDataAsync();
+    }
+
+
+    // Zorgt ervoor dat de pagina pas inlaadt wanneer alle functies zijn aangeroepen.
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            await Task.WhenAll(
+                LoadMyWorkoutsAsync()
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd omdat de pagina is verlaten.
+        }
+        catch (Exception ex)
+        {
+            // Toont een foutmelding wanneer het ophalen van de workouts mislukt.
+            ToastService.ShowToast(ex.Message, ToastLevel.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    // Haalt alle workouts van de ingelogde gebruiker op.
+    private async Task LoadMyWorkoutsAsync()
+    {
+        // Roept de service aan om workouts op te halen.
+        myWorkouts = await WorkoutsService.GetMyWorkoutsAsync(cancellationToken);
+    }
+
+
+    // Zorgt ervoor de het goede font awesome icoontje bij een bepaalde workout type komt.
+    private string GetWorkoutIcon(WorkoutType type)
+    {
+        return type switch
+        {
+            WorkoutType.Strength => "fa-solid fa-dumbbell strength-icon",
+            WorkoutType.Cardio => "fa-solid fa-heart-pulse cardio-icon",
+            WorkoutType.Mixed => "fa-solid fa-fire mixed-icon",
+            _ => "fa-solid fa-dumbbell"
+        };
+    }
+
+
+    // Sluit de bevestigingspopup.
+    private void ClosePopup()
+    {
+        // Zet boolean weer op false zodat popup verdwijnt.
+        showConfirmAddWorkoutToPlanningPopup = false;
+    }
+
+
+    // Opent de bevestigingspopup om een workout toe te voegen aan de planning.
+    private void OpenConfirmAddWorkoutToPlanningPopup(Workout workout)
+    {
+        // Voegt het id van de workout toe aan de private Guid.
+        selectedWorkoutId = workout.Id;
+
+        // Voegt de naam van de workout toe aan de private string.
+        selectedWorkoutName = workout.Name;
+
+        // Zet boolean op true om popup te tonen.
+        showConfirmAddWorkoutToPlanningPopup = true;
+    }
+
+
+    // Voegt de geselecteerde workout toe aan de planning.
+    private async Task ConfirmAddWorkoutToPlanning()
+    {
+        // Voorkomt dat er meerdere delete requests tegelijk worden verstuurd.
+        if (isAddingWorkout)
+            return;
+
+        // Zorgt ervoor dat de knop tijdens het verwijderen inactief worden.
+        isAddingWorkout = true;
+
+        // Zet boolean weer op false zodat popup verdwijnt.
+        showConfirmAddWorkoutToPlanningPopup = false;
+
+        try
+        {
+            // Roept de service aan om de workout toe te voegen aan de dagplanning via de API en krijgt een message terug.
+            var message = await PlanningService.AddWorkoutToPlanningAsync(selectedWorkoutId, SelectedDay, cancellationToken);
+
+            // Toont een succesmelding in een toast.
+            ToastService.ShowToast(message, ToastLevel.Success);
+
+            // Navigeert terug naar de planning wanneer de workout succesvol is toegevoegd.
+            Navigation.NavigateTo("/Planning");
+        }
+        catch (Exception ex)
+        {
+            // Toont een foutmelding in een toast als er iets misgaat.
+            ToastService.ShowToast(ex.Message, ToastLevel.Error);
+        }
+        finally
+        {
+            // Maakt de knop weer actief.
+            isAddingWorkout = false;
+        }
+    }
+
+    // Filter de lijst met workouts.
+    private IEnumerable<Workout> FilteredMyWorkouts =>
+        myWorkouts.Where(x =>
+            // Als er niks in de zoekbalk is ingevuld stuur alle oefeningen terug.
+            string.IsNullOrWhiteSpace(searchTerm) ||
+            // Als de zoekbalk wel is ingevuld filter de oefeningen met wat vergeleken is.
+            x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+        );
+
+    // Wordt uitgevoerd wanneer de parameters van de pagina worden ingesteld.
+    protected override void OnParametersSet()
+    {
+        // Probeert de meegestuurde dag om te zetten naar een DayOfWeek.
+        if (Enum.TryParse<DayOfWeek>(Day, true, out var day))
+        {
+            SelectedDay = day;
+        }
+        else
+        {
+            // Ongeldige dag opgegeven.
+            Navigation.NavigateTo("/Planning");
+        }
+    }
+
+    // Annuleert lopende requests wanneer de component wordt verwijderd.
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+}

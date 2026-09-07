@@ -1,0 +1,243 @@
+﻿@page "/Planning"
+@implements IDisposable
+
+
+<div class="page-container">
+
+    <div class="pagetitle-back">
+        <BackButton />
+        <div class="pagetitle">Week Planning</div>
+    </div>
+
+    @if (isLoading)
+    {
+        <p class="status-message">Loading planning...</p>
+    }
+    else
+    {
+        <div class="planning-list">
+
+            @foreach (var day in Days)
+            {
+                var planning = myPlanning.FirstOrDefault(x => x.Day == day);
+
+                <div class="planning-day-card">
+
+                    <div class="planning-day-name"> @day </div>
+
+                    @if (planning != null)
+                    {
+                        <div class="planning-workout"
+                             @onclick="() => WorkoutDetail(planning.WorkoutId)">
+                            @planning.WorkoutName
+                        </div>
+
+                        <div class="planning-actions">
+                            <button class="button-pageheader delete-button" @onclick="() => OpenConfirmDeleteWorkoutPopup(planning, day)"> <i class="fa-solid fa-x"></i> <span>Delete Workout</span> </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="planning-workout planning-workout-empty"> No Workout Planned! </div>
+
+                        <div class="planning-actions">
+                            <button class="button-pageheader add-button" @onclick="() => AddDayPlanning(day)"> <i class="fa-solid fa-plus"></i><span>Add Workout</span> </button>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+
+@if (showConfirmDeleteDayPlanningPopup)
+{
+    <div class="confirm-modal-overlay">
+        <div class="confirm-modal-content">
+
+            <div class="confirm-modal-title"> You want to delete <span>@selectedWorkoutName</span>?</div>
+
+            <div class="confirm-modal-actions">
+                <button class="confirm-modal-btn confirm-modal-btn-cancel"@onclick="ClosePopup"><i class="fa-solid fa-x"></i> Cancel</button>
+                <button class="confirm-modal-btn confirm-modal-btn-delete"@onclick="ConfirmDeleteDayPlanning" disabled="@isDeletingWorkout"><i class="fa-solid fa-trash"></i>@(isDeletingWorkout ? "Deleting..." : "Delete") </button>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+
+    // Bevat alle dagen van de week.
+    private readonly DayOfWeek[] Days =
+    {
+        DayOfWeek.Monday,
+        DayOfWeek.Tuesday,
+        DayOfWeek.Wednesday,
+        DayOfWeek.Thursday,
+        DayOfWeek.Friday,
+        DayOfWeek.Saturday,
+        DayOfWeek.Sunday
+    };
+
+
+    // Bevat de opgehaalde weekplanning.
+    private List<WeekPlanning> myPlanning = new();
+
+    // Injecteren van benodigheden van de pagina.
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private PlanningService PlanningService { get; set; } = default!;
+    [Inject] private ToastService ToastService { get; set; } = default!;
+
+
+    // Geeft aan of de pagina nog bezig is met laden.
+    private bool isLoading;
+
+
+    // De naam van de workout die je wilt verwijderen.
+    private string selectedWorkoutName = "";
+
+
+    // Het ID van de planning die verwijderd moet worden.
+    private Guid selectedPlanningId;
+
+
+    // De naam van de dag waar je de workout van wilt verwijderen.
+    private DayOfWeek selectedPlannignDay;
+
+
+    // Geeft aan of de bevestigingspopup voor het verwijderen zichtbaar is.
+    private bool showConfirmDeleteDayPlanningPopup;
+
+    // Boolean zorgt ervoor dat wanneer je op de knop klikt om de workout te verwijderen dat deze knop inactief wordt.
+    private bool isDeletingWorkout;
+
+    // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private CancellationToken cancellationToken => _cancellationTokenSource.Token;
+
+
+    // Wordt uitgevoerd wanneer de pagina wordt geladen.
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllDataAsync();
+    }
+
+
+    // Zorgt ervoor dat de pagina pas inlaadt wanneer alle functies zijn aangeroepen.
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            await Task.WhenAll(
+                LoadMyWeekPlanningAsync()
+            );
+        }
+        catch (Exception ex)
+        {
+            // Toont een foutmelding wanneer het ophalen van de planning mislukt.
+            ToastService.ShowToast(ex.Message, ToastLevel.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    // Haalt de weekplanning op.
+    private async Task LoadMyWeekPlanningAsync()
+    {
+        // Roept de service aan om de weekplanning op te halen.
+        myPlanning = await PlanningService.GetMyWeekPlanningAsync(cancellationToken);
+    }
+
+
+    // Sluit de bevestigingspopup.
+    private void ClosePopup()
+    {
+        // Zet de boolean weer op false zodat de popup verdwijnt.
+        showConfirmDeleteDayPlanningPopup = false;
+    }
+
+
+    // Opent de bevestigingspopup voor het verwijderen van een workout.
+    private void OpenConfirmDeleteWorkoutPopup(WeekPlanning planning, DayOfWeek day)
+    {
+        // Voegt de naam van de workout toe aan de private string.
+        selectedWorkoutName = planning.WorkoutName;
+
+        // Voegt de naam van de dag toe aan de private string.
+        selectedPlannignDay = day;
+
+        // Voegt het ID van de planning toe.
+        selectedPlanningId = planning.Id;
+
+        // Zorgt ervoor dat de bevestigingspopup zichtbaar wordt.
+        showConfirmDeleteDayPlanningPopup = true;
+    }
+
+
+    // Verwijdert de workout uit de planning.
+    private async Task ConfirmDeleteDayPlanning()
+    {
+        // Voorkomt dat er meerdere delete requests tegelijk worden verstuurd.
+        if (isDeletingWorkout)
+            return;
+
+        // Zorgt ervoor dat de knop tijdens het verwijderen inactief worden.
+        isDeletingWorkout = true;
+
+        // Sluit de bevestigingspopup.
+        showConfirmDeleteDayPlanningPopup = false;
+
+        try
+        {
+            // Roept de service aan om de workout uit de planning te verwijderen.
+            var message = await PlanningService.DeleteDayPlanningAsync(selectedPlanningId, cancellationToken);
+
+            // Toont een succesmelding in een toast.
+            ToastService.ShowToast(message, ToastLevel.Success);
+
+            // Verwijdert de planning lokaal zodat deze direct van het scherm verdwijnt.
+            myPlanning.RemoveAll(x => x.Id == selectedPlanningId);
+        }
+        catch (Exception ex)
+        {
+            // Toont een foutmelding in een toast.
+            ToastService.ShowToast(ex.Message, ToastLevel.Error);
+        }
+        finally
+        {
+            // Maakt de knop weer actief.
+            isDeletingWorkout = false;
+        }
+    }
+
+
+    // Navigeert naar de pagina om een workout aan een dag toe te voegen.
+    private void AddDayPlanning(DayOfWeek day)
+    {
+        // Navigeert naar de AddDayPlanning pagina en stuurt de dag mee.
+        Navigation.NavigateTo($"/AddDayPlanning/{day}");
+    }
+
+
+    // Navigeert naar de details van een workout.
+    private void WorkoutDetail(Guid workoutId)
+    {
+        // Navigeert naar de WorkoutDetail pagina en stuurt het ID van de workout mee.
+        Navigation.NavigateTo($"/WorkoutDetail/{workoutId}");
+    }
+
+       // Annuleert lopende requests wanneer de component wordt verwijderd.
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+
+}
