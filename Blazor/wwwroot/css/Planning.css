@@ -28,6 +28,10 @@
     font-weight: 700;
 }
 
+.planning-day-today {
+    color: #7a7bff;
+    font-weight: 700;
+}
 
 .planning-workout {
     min-height: 44px;

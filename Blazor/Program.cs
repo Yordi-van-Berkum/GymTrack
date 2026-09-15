@@ -19,6 +19,7 @@ builder.Services.AddScoped<ToastService>();
 builder.Services.AddScoped<ExercisesService>();
 builder.Services.AddScoped<WorkoutsService>();
 builder.Services.AddScoped<PlanningService>();
+builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<CustomAuthStateProvider>();
 builder.Services.AddScoped<SafeApiHelper>();
 

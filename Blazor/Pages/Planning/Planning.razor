@@ -23,7 +23,7 @@
 
                 <div class="planning-day-card">
 
-                    <div class="planning-day-name"> @day </div>
+                    <div class="planning-day-name @(day == DateTime.Today.DayOfWeek ? "planning-day-today" : "")"> @(day == DateTime.Today.DayOfWeek ? "Today" : day.ToString())</div>
 
                     @if (planning != null)
                     {

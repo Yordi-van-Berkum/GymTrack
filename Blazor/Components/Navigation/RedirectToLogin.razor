@@ -1,0 +1,11 @@
+﻿
+@code {
+    // Injecteren van benodigheden van de pagina
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    // Stuurt gebruikers die niet ingelogd zijn naar de loginpagina.
+    protected override void OnInitialized()
+    {
+        Navigation.NavigateTo("/login");
+    }
+}

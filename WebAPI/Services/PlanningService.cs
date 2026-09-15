@@ -90,5 +90,25 @@ namespace WebAPI.Services
             // Slaat de nieuwe planning op in de database.
             await _context.SaveChangesAsync(cancellationToken);
         }
+
+        // Haalt de workout van vandaag op uit de weekplanning.
+        public async Task<WeekPlanningDto?> GetTodaysWorkoutAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Bepaalt welke dag van de week het vandaag is.
+            var today = DateTime.Today.DayOfWeek;
+
+            // Haalt de workout van vandaag op voor de ingelogde gebruiker.
+            return await _context.Planning
+                .AsNoTracking()
+                .Where(p => p.UserId == userId && p.Day == today)
+                .Select(p => new WeekPlanningDto
+                {
+                    Id = p.Id,
+                    Day = p.Day,
+                    WorkoutId = p.WorkoutId,
+                    WorkoutName = p.Workout.Name
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+        }
     }
 }
