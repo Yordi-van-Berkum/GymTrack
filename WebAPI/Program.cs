@@ -98,6 +98,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IExercisesService, ExercisesService>();
 builder.Services.AddScoped<IWorkoutsService, WorkoutsService>();
 builder.Services.AddScoped<IPlanningService, PlanningService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddHostedService<WorkoutSessionCleanupService>();
 
 

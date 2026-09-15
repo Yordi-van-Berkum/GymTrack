@@ -7,5 +7,6 @@ namespace WebAPI.Services
         Task<List<WeekPlanningDto>> GetMyWeekPlanningAsync(Guid userId, CancellationToken cancellationToken = default);
         Task DeleteDayPlanningAsync(Guid planningId, Guid userId, CancellationToken cancellationToken = default);
         Task AddWorkoutToPlanningAsync(Guid workoutId,DayOfWeek day, Guid userId, CancellationToken cancellationToken = default);
+        Task<WeekPlanningDto?> GetTodaysWorkoutAsync(Guid userId, CancellationToken cancellationToken = default);
     }
 }

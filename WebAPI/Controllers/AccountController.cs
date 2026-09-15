@@ -1,51 +1,35 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using WebAPI.Models.Auth;
+using WebAPI.Services;
 
 namespace WebAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Authorize]
     [ApiController]
+    [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
-        private readonly UserManager<IdentityUser> userManager;
+        private readonly IAccountService _accountService;
 
-        public AccountController(UserManager<IdentityUser> userManager)
+        public AccountController(IAccountService accountService)
         {
-            this.userManager = userManager;
+            _accountService = accountService;
         }
 
-        [HttpGet]
-        public IActionResult Welcome()
+
+        // Haalt het profiel op van de ingelogde gebruiker.
+        [HttpGet("getmyprofile")]
+        public async Task<IActionResult> GetMyProfile()
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
-            {
-                return Ok("You are not authenticated");
-            }
-            return Ok("You are authenticated");
-        }
+            // Haalt het profiel op van de ingelogde gebruiker.
+            var userProfile = await _accountService.GetMyProfileAsync(User);
 
-        [Authorize]
-        [HttpGet("Profile")]
-        public async Task<IActionResult> Profile()
-        {
-            var currentUser = await userManager.GetUserAsync(User);
-            if(currentUser == null)
-            {
-                return BadRequest();
-            }
+            // De gebruiker bestaat niet.
+            if (userProfile is null)
+                return NotFound("User not found.");
 
-            var userProfile = new UserProfile
-            {
-                Id = currentUser.Id,
-                Name = currentUser.UserName ?? "",
-                Email = currentUser.Email ?? "",
-                PhoneNumber = currentUser.PhoneNumber ?? "",
-            };
-
+            // Geeft het gebruikersprofiel terug.
             return Ok(userProfile);
         }
-
     }
 }

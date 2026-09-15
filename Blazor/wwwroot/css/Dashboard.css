@@ -1,0 +1,176 @@
+﻿
+.dashboard-welcome-card {
+    min-height: 400px;
+    display: flex;
+    align-items: flex-end;
+    padding: 32px;
+    margin-bottom: 32px;
+    background-image: url("/images/Dashboard/dashboardheader.png");
+    background-size: cover;
+    background-position: center;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+    .dashboard-welcome-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient( to top, rgba(2, 6, 23, 0.95), rgba(2, 6, 23, 0.15) );
+    }
+
+.dashboard-welcome-overlay {
+    position: relative;
+    z-index: 1;
+}
+
+.welcome-message {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+}
+
+    .welcome-message span {
+        color: #7a7bff;
+    }
+
+.ready-message {
+    margin-top: 8px;
+    color: #e2e8f0;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+
+/* Today's workout */
+.dashboard-todays-workout {
+    padding: 24px 18px;
+    text-align: center;
+    background: #020617;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.todays-workout-message {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.todays-workout {
+    margin-top: 15px;
+    color: #e2e8f0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+
+/* Quick actions */
+.dashboard-quick-actions {
+    margin-top: 32px;
+}
+
+.quick-actions-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+
+.quick-actions-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    width: 100%;
+}
+
+.quick-action-card {
+    min-height: 110px;
+    padding: 24px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    background: #020617;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+    .quick-action-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(122, 123, 255, 0.5);
+        box-shadow: 0 8px 25px rgba(122, 123, 255, 0.35);
+    }
+
+.quick-action-icon {
+    color: #7a7bff;
+    font-size: 26px;
+}
+
+.quick-action-name {
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+
+@media (max-width: 700px) {
+
+    /* Welcome card */
+    .dashboard-welcome-card {
+        min-height: 220px;
+        padding: 24px 18px;
+        margin-bottom: 28px;
+    }
+
+    .welcome-message {
+        font-size: 24px;
+    }
+
+    .ready-message {
+        font-size: 14px;
+    }
+
+
+    /* Today's workout */
+    .dashboard-todays-workout {
+        padding: 24px 18px;
+    }
+
+    .todays-workout-message {
+        font-size: 18px;
+    }
+
+    .todays-workout {
+        font-size: 17px;
+    }
+
+
+    /* Quick actions */
+    .dashboard-quick-actions {
+        margin-top: 28px;
+    }
+
+    .quick-actions-title {
+        font-size: 18px;
+    }
+
+    .quick-actions-cards {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .quick-action-card {
+        min-height: 90px;
+    }
+
+    .quick-action-name {
+        font-size: 17px;
+    }
+}

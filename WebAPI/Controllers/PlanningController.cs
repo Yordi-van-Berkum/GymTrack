@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.Extensions;
+using WebAPI.Models.Planning;
 using WebAPI.Services;
 
 namespace WebAPI.Controllers
@@ -60,6 +61,25 @@ namespace WebAPI.Controllers
 
             // Geeft een succesvolle response terug wanneer de workout is toegevoegd.
             return Ok("Workout added successfully!");
+        }
+
+        // Haalt de workout van vandaag op uit de weekplanning.
+        [HttpGet("gettodaysworkout")]
+        public async Task<IActionResult> GetTodaysWorkout(CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Haalt de workout van vandaag op van de ingelogde gebruiker.
+            var workout = await _planningService.GetTodaysWorkoutAsync(userId, cancellationToken);
+
+            // Er staat geen workout gepland voor vandaag.
+            if (workout is null)
+                return Ok(new WeekPlanningDto());
+
+            // Geeft de workout van vandaag terug.
+            return Ok(workout);
         }
     }
 }

@@ -2,6 +2,99 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="page-container">
 
-Welcome to your new app.
+    <div class="dashboard-welcome-card">
+
+        <div class="dashboard-welcome-overlay">
+            <div class="welcome-message">
+                Welcome back, <span>@userProfile?.Name!</span>
+            </div>
+
+            <div class="ready-message">
+                Ready for today's workout?
+            </div>
+        </div>
+
+    </div>
+
+    <div class="dashboard-quick-actions">
+
+        <div class="quick-actions-title">Quick Actions</div>
+
+        <div class="quick-actions-cards">
+
+            <div class="quick-action-card" @onclick='() => Navigation.NavigateTo("/Planning")'>
+                <i class="fa-solid fa-calendar-days quick-action-icon"></i>
+                <div class="quick-action-name">Planning</div>
+            </div>
+
+            <div class="quick-action-card" @onclick='() => Navigation.NavigateTo("/Workouts")'>
+                <i class="fa-solid fa-dumbbell quick-action-icon"></i>
+                <div class="quick-action-name">Workouts</div>
+            </div>
+
+            <div class="quick-action-card" @onclick='() => Navigation.NavigateTo("/MuscleGroups")'>
+                <i class="fa-solid fa-person-running quick-action-icon"></i>
+                <div class="quick-action-name">Exercises</div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+
+@code {
+    // Bevat het profiel van de ingelogde gebruiker.
+    private UserProfile? userProfile
+
+    // Geeft aan of de gegevens nog worden geladen.
+    private bool isLoading;
+
+    // Geeft aan of er momenteel een workout wordt gestart.
+    private bool isStartingWorkout;
+
+    // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private CancellationToken cancellationToken => _cancellationTokenSource.Token;
+
+    // Injecteren van de benodigde services.
+    [Inject] private AccountService AccountService { get; set; } = default!;
+    [Inject] private PlanningService PlanningService { get; set; } = default!;
+    [Inject] private WorkoutsService WorkoutsService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private ToastService ToastService { get; set; } = default!;
+
+    // Wordt uitgevoerd wanneer de pagina wordt geladen.
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllDataAsync();
+    }
+
+    // Haalt alle gegevens voor het Dashboard op.
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            // Haalt het gebruikersprofiel en de workout van vandaag op.
+            await Task.WhenAll(
+                LoadUserProfileAsync()
+            );
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // Haalt het profiel van de ingelogde gebruiker op.
+    private async Task LoadUserProfileAsync()
+    {
+        // Haalt het profiel op via de AccountService.
+        userProfile = await AccountService.GetMyProfileAsync();
+    }
+}
