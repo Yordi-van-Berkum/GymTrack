@@ -1,4 +1,4 @@
-﻿using WebAPI.Models.Exercises;
+﻿using ExerciseModel = WebAPI.Models.Exercises.Exercise;
 
 namespace WebAPI.Models.Workout
 {
@@ -9,7 +9,7 @@ namespace WebAPI.Models.Workout
         public Workout Workout { get; set; } = null!;
 
         public int ExerciseId { get; set; }
-        public Exercise Exercise { get; set; } = null!;
+        public ExerciseModel Exercise { get; set; } = null!;
 
         public int SortOrder { get; set; }
     }

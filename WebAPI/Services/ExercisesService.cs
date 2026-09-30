@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using WebAPI.Models.Exercise;
 using WebAPI.Models.Exercises;
 
 namespace WebAPI.Services
@@ -58,5 +59,59 @@ namespace WebAPI.Services
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
+        // Haalt het hoogste gewicht op dat de gebruiker ooit heeft gebruikt voor een oefening.
+        public async Task<ExercisePersonalRecordDto?> GetExercisePersonalRecordAsync(int exerciseId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Zoekt alle sets die bij de opgegeven oefening horen
+            // en controleert tegelijkertijd of de workout session van de ingelogde gebruiker is.
+            // Alleen afgeronde workout sessions worden meegenomen.
+            var personalRecord = await _context.WorkoutSets
+                .AsNoTracking()
+                .Where(ws => ws.WorkoutSessionExercise.ExerciseId == exerciseId && ws.WorkoutSessionExercise.WorkoutSession.Workout.UserId == userId && ws.WorkoutSessionExercise.WorkoutSession.IsCompleted)
+                .OrderByDescending(ws => ws.Weight)
+                .ThenByDescending(ws => ws.Reps)
+                .Select(ws => new ExercisePersonalRecordDto
+                {
+                    Weight = ws.Weight,
+                    Reps = ws.Reps
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            // Return PR
+            // Wanneer de oefening nog niet gedaan is stuur 0 kg en 0 reps terug.
+            return personalRecord ?? new ExercisePersonalRecordDto
+            {
+                Weight = 0,
+                Reps = 0
+            };
+        }
+
+        // Haalt de laatste uitgevoerde set op van een oefening.
+        public async Task<ExerciseLastPerformedDto?> GetExerciseLastPerformedAsync(int exerciseId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Zoekt alle sets die bij de opgegeven oefening horen.
+            // Controleert tegelijkertijd of de workout session van de ingelogde gebruiker is.
+            // Alleen afgeronde workout sessions worden meegenomen.
+            // Pakt de laatste set van de laatste keer dat deze oefening uitgevoerd is.
+            var lastPerformed = await _context.WorkoutSets
+                .AsNoTracking()
+                .Where(ws => ws.WorkoutSessionExercise.ExerciseId == exerciseId && ws.WorkoutSessionExercise.WorkoutSession.Workout.UserId == userId && ws.WorkoutSessionExercise.WorkoutSession.IsCompleted)
+                .OrderByDescending(ws => ws.WorkoutSessionExercise.WorkoutSession.StartedAt)
+                .ThenByDescending(ws => ws.SetNumber)
+                .Select(ws => new ExerciseLastPerformedDto
+                {
+                    Weight = ws.Weight,
+                    Reps = ws.Reps
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            // Return lastPerformed als er een oefening gedaan is.
+            // Geeft 0 kg en 0 reps terug wanneer de gebruiker deze oefening nog nooit heeft uitgevoerd.
+            return lastPerformed ?? new ExerciseLastPerformedDto
+            {
+                Weight = 0,
+                Reps = 0
+            };
+        }
     }
 }

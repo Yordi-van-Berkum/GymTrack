@@ -1,16 +1,19 @@
-﻿
+﻿/* =========================
+   DASHBOARD
+   ========================= */
+
 .dashboard-welcome-card {
     min-height: 400px;
     display: flex;
     align-items: flex-end;
     padding: 32px;
     margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
     background-image: url("/images/Dashboard/dashboardheader.png");
     background-size: cover;
     background-position: center;
-    border-radius: 16px;
-    overflow: hidden;
-    position: relative;
+    border-radius: var(--radius-card);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
@@ -27,60 +30,61 @@
 }
 
 .welcome-message {
-    font-size: 28px;
-    font-weight: 700;
-    color: white;
+    color: var(--color-text-white);
 }
 
     .welcome-message span {
-        color: #7a7bff;
+        color: var(--color-primary);
     }
 
 .ready-message {
     margin-top: 8px;
-    color: #e2e8f0;
-    font-size: 15px;
+    color: var(--color-text);
     font-weight: 500;
 }
 
 
-/* Today's workout */
+/* =========================
+   TODAY'S WORKOUT
+   ========================= */
+
 .dashboard-todays-workout {
     padding: 24px 18px;
     text-align: center;
-    background: #020617;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .todays-workout-message {
-    font-size: 20px;
+    font-size: var(--font-size-h3);
     font-weight: 700;
 }
 
 .todays-workout {
     margin-top: 15px;
-    color: #e2e8f0;
+    color: var(--color-text);
     font-size: 18px;
     font-weight: 700;
 }
 
 
-/* Quick actions */
+/* =========================
+   QUICK ACTIONS
+   ========================= */
+
 .dashboard-quick-actions {
     margin-top: 32px;
 }
 
 .quick-actions-title {
-    font-size: 20px;
-    font-weight: 700;
     margin-bottom: 18px;
 }
 
 .quick-actions-cards {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 18px;
     width: 100%;
 }
@@ -94,35 +98,44 @@
     justify-content: center;
     gap: 10px;
     text-align: center;
-    background: #020617;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
     .quick-action-card:hover {
         transform: translateY(-3px);
+        background: var(--color-surface);
         border-color: rgba(122, 123, 255, 0.5);
         box-shadow: 0 8px 25px rgba(122, 123, 255, 0.35);
     }
 
 .quick-action-icon {
-    color: #7a7bff;
+    color: var(--color-primary);
     font-size: 26px;
+    transition: color 0.2s ease;
+}
+
+.quick-action-card:hover .quick-action-icon {
+    color: var(--color-primary-light);
 }
 
 .quick-action-name {
-    color: white;
+    color: var(--color-text-white);
     font-size: 18px;
     font-weight: 700;
 }
 
 
+/* =========================
+   MOBILE
+   ========================= */
+
 @media (max-width: 700px) {
 
-    /* Welcome card */
     .dashboard-welcome-card {
         min-height: 220px;
         padding: 24px 18px;
@@ -130,21 +143,22 @@
     }
 
     .welcome-message {
-        font-size: 24px;
+        font-size: var(--font-size-h2);
     }
 
     .ready-message {
-        font-size: 14px;
+        font-size: var(--font-size-small);
     }
 
 
     /* Today's workout */
+
     .dashboard-todays-workout {
         padding: 24px 18px;
     }
 
     .todays-workout-message {
-        font-size: 18px;
+        font-size: var(--font-size-h3);
     }
 
     .todays-workout {
@@ -153,12 +167,13 @@
 
 
     /* Quick actions */
+
     .dashboard-quick-actions {
         margin-top: 28px;
     }
 
     .quick-actions-title {
-        font-size: 18px;
+        margin-bottom: 16px;
     }
 
     .quick-actions-cards {

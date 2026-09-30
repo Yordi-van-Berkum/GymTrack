@@ -261,5 +261,19 @@ namespace WebAPI.Controllers
             // Geeft terug of de workout session bestaat.
             return Ok(exists);
         }
+
+        [HttpGet("{workoutId:guid}/history")]
+        public async Task<IActionResult> GetWorkoutExerciseHistory(Guid workoutId, CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Haalt de history op van een workout vanuit de backend.
+            var history = await _workoutsService.GetWorkoutExerciseHistoryAsync(workoutId, userId, cancellationToken);
+
+            // Geeft de history van de workout terug.
+            return Ok(history);
+        }
     }
 }

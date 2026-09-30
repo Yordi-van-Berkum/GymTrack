@@ -21,8 +21,8 @@
                         <a @onclick='() => NavigateTo("/Musclegroups")'>Exercises</a>
                         <button class="logout-btn" @onclick="Logout">Logout</button>
                     </nav>
-
                 </Authorized>
+
                 <NotAuthorized>
                     <nav class="nav-links auth-links @(mobileMenuOpen ? "show" : "")">
                         <a @onclick='() => NavigateTo("/Login")'>Login</a>
@@ -41,44 +41,33 @@
 </div>
 
 @code {
-    // Houdt bij of het mobiele menu open of dicht is.
-    private bool mobileMenuOpen = false;
+    private bool mobileMenuOpen;
 
-
-    // Injecteren van benodigheden van de pagina
     [Inject] private CustomAuthStateProvider AuthenticationService { get; set; } = default!;
-    [Inject] ToastService ToastService { get; set; } = default!;
+    [Inject] private ToastService ToastService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
 
-
-    // Zorgt ervoor dat het mobiele menu open gaat.
     private void ToggleMenu()
     {
         mobileMenuOpen = !mobileMenuOpen;
     }
 
-    // Zorgt ervoor dat als je navigeert het mobiele menu weer dicht klapt.
     private void NavigateTo(string url)
     {
-        // Sluit het mobiele menu.
         mobileMenuOpen = false;
-
-        // Navigeert naar de gekozen pagina.
         Navigation.NavigateTo(url);
     }
 
     private void Logout()
     {
-        // Sluit het mobiele menu.
         mobileMenuOpen = false;
 
-        // Logt de gebruiker uit via de authentication service.
         AuthenticationService.Logout();
 
-        // Geeft een succesmelding aan de gebruiker.
-        ToastService.ShowToast("Logged out successfully!", ToastLevel.Success);
+        ToastService.ShowToast(
+            "Logged out successfully!",
+            ToastLevel.Success);
 
-        // Navigeert terug naar de homepagina.
         Navigation.NavigateTo("/");
     }
 }

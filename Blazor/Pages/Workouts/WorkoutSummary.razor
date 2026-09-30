@@ -15,12 +15,9 @@
     {
         <div class="workout-summary-card">
 
-            <div class="workout-summary-title">
-                Workout Complete! 🎉
-            </div>
+            <div class="workout-summary-title">Workout Complete! 🎉</div>
 
             <div class="workout-summary-content">
-
                 @foreach (var exercise in workoutSummary.Exercises)
                 {
                     <div class="workout-summary-exercise">
@@ -32,7 +29,6 @@
                         @if (exercise.Sets.Any())
                         {
                             <div class="workout-summary-set-list">
-
                                 @foreach (var set in exercise.Sets)
                                 {
                                     <div class="workout-summary-set-item">
@@ -40,7 +36,6 @@
                                         <span>@set.Weight kg × @set.Reps</span>
                                     </div>
                                 }
-
                             </div>
                         }
                         else
@@ -52,12 +47,10 @@
 
                     </div>
                 }
-
             </div>
 
             <div class="workout-summary-actions">
-                <button class="button-pageheader update-button"
-                        @onclick="BackToWorkouts">
+                <button class="button-pageheader update-button" @onclick="BackToWorkouts">
                     <i class="fa-solid fa-arrow-left"></i>
                     <span>Back to Workouts</span>
                 </button>
@@ -69,44 +62,33 @@
 </div>
 
 @code {
-    // Meegestuurde WorkoutSessionId vanuit de workout session pagina.
     [Parameter]
     public Guid WorkoutSessionId { get; set; }
 
-    // Bevat de gegevens van de afgeronde workout.
     private WorkoutSummaryDto? workoutSummary;
-
-    // Geeft aan of de summary nog wordt geladen.
     private bool isLoading;
 
-    // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
-    // Benodigde services.
     [Inject] private WorkoutsService WorkoutsService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private ToastService ToastService { get; set; } = default!;
 
-
-    // Wordt uitgevoerd wanneer de pagina wordt geladen.
     protected override async Task OnInitializedAsync()
     {
         await LoadAllDataAsync();
     }
 
-
-    // Zorgt ervoor dat de pagina pas inlaad wanneer alle functies zijn aangeroepen.
     private async Task LoadAllDataAsync()
     {
         try
         {
             isLoading = true;
-
             await LoadWorkoutSummaryAsync(_cancellationTokenSource.Token);
         }
         catch (OperationCanceledException)
         {
-            // Request is geannuleerd omdat de pagina is verlaten.
+            // Request is geannuleerd wanneer de pagina wordt verlaten.
         }
         catch (Exception ex)
         {
@@ -118,8 +100,6 @@
         }
     }
 
-
-    // Haalt de workout summary op van de backend.
     private async Task LoadWorkoutSummaryAsync(CancellationToken cancellationToken)
     {
         workoutSummary = await WorkoutsService.GetWorkoutSummaryAsync(
@@ -127,15 +107,11 @@
             cancellationToken);
     }
 
-
-    // Navigeert terug naar de workouts pagina.
     private void BackToWorkouts()
     {
         Navigation.NavigateTo("/Workouts");
     }
 
-
-    // Annuleert lopende requests wanneer de component wordt verwijderd.
     public void Dispose()
     {
         _cancellationTokenSource.Cancel();

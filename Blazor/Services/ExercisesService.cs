@@ -1,4 +1,5 @@
 ﻿using Blazor.Models.Exercises;
+using System;
 
 namespace Blazor.Services
 {
@@ -32,6 +33,20 @@ namespace Blazor.Services
         {
             // Haalt de informatie op van een oefening.
             return await _safeApiHelper.SafeDataApiCallAsync<Exercise>(() => _httpClient.GetAsync($"api/exercises/getexercise/{exerciseId}", cancellationToken));
+        }
+
+        // Haalt het persoonlijke record op van een oefening.
+        public async Task<ExercisePersonalRecord?> GetExercisePersonalRecordAsync(int exerciseId, CancellationToken cancellationToken = default)
+        {
+            // SafeDataApiCallAsync voert de HTTP-aanroep veilig uit. Deze functie staat in de SafeApiHelper.cs in de Services map.
+            return await _safeApiHelper.SafeDataApiCallAsync<ExercisePersonalRecord?>(() => _httpClient.GetAsync($"api/exercises/exercisepersonalrecord/{exerciseId}", cancellationToken));
+        }
+
+        // Haalt de laatste uitgevoerde set op van een oefening.
+        public async Task<ExerciseLastPerformed?> GetExerciseLastPerformedAsync(int exerciseId, CancellationToken cancellationToken = default)
+        {
+            // SafeDataApiCallAsync voert de HTTP-aanroep veilig uit. Deze functie staat in de SafeApiHelper.cs in de Services map.
+            return await _safeApiHelper.SafeDataApiCallAsync<ExerciseLastPerformed?>(() => _httpClient.GetAsync($"api/exercises/exerciselastperformed/{exerciseId}", cancellationToken));
         }
     }
 }
