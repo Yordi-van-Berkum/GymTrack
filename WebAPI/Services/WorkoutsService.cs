@@ -74,7 +74,7 @@ namespace WebAPI.Services
 
             // De workout bestaat niet of behoort niet toe aan de ingelogde gebruiker.
             if (workout is null)
-                throw new NotFoundException("Exercise not found!");
+                throw new NotFoundException("Workout  not found!");
 
             // Controleert of de opgegeven oefening daadwerkelijk bestaat in de database.
             var exerciseExists = await _context.Exercises.AnyAsync(e => e.Id == workoutExerciseDto.ExerciseId, cancellationToken);
@@ -469,6 +469,113 @@ namespace WebAPI.Services
             return await _context.WorkoutSessions.AnyAsync(ws => ws.Id == workoutSessionId && ws.Workout.UserId == userId, cancellationToken);
         }
 
+        // Haalt de historische prestaties op van de huidige oefeningen van een workout.
+        public async Task<List<WorkoutExerciseHistoryDto>> GetWorkoutExerciseHistoryAsync(Guid workoutId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            // Controleert of de workout bestaat en van de ingelogde gebruiker is.
+            var workout = await _context.Workouts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(w => w.Id == workoutId && w.UserId == userId, cancellationToken);
 
+            // De workout bestaat niet of behoort niet toe aan de ingelogde gebruiker.
+            if (workout is null)
+                throw new NotFoundException("Workout not found.");
+
+            // Haalt de oefeningen op die momenteel aan de workout gekoppeld zijn.
+            var exerciseIds = await _context.WorkoutExercises
+                .AsNoTracking()
+                .Where(we => we.WorkoutId == workoutId)
+                .Select(we => we.ExerciseId)
+                .ToListAsync(cancellationToken);
+
+            // Wanneer de workout geen oefeningen bevat, is er ook geen historie.
+            if (exerciseIds.Count == 0)
+                return new List<WorkoutExerciseHistoryDto>();
+
+            // Haalt de laatste 5 afgeronde workout sessions op.
+            var workoutSessionIds = await _context.WorkoutSessions
+                .AsNoTracking()
+                .Where(ws =>ws.WorkoutId == workoutId && ws.IsCompleted)
+                .OrderByDescending(ws => ws.StartedAt)
+                .Take(11)
+                .Select(ws => ws.Id)
+                .ToListAsync(cancellationToken);
+
+            // Wanneer er nog geen afgeronde workouts zijn, is er geen historie.
+            if (workoutSessionIds.Count == 0)
+                return new List<WorkoutExerciseHistoryDto>();
+
+            // Haalt alle sets op van de huidige oefeningen binnen de laatste 5 sessies.
+            var history = await _context.WorkoutSessionExercises
+                .AsNoTracking()
+                .Where(wse => workoutSessionIds.Contains(wse.WorkoutSessionId) && exerciseIds.Contains(wse.ExerciseId))
+                .Select(wse => new
+                {
+                    ExerciseId = wse.ExerciseId,
+                    ExerciseName = wse.Exercise.Name,
+                    Date = wse.WorkoutSession.StartedAt,
+                    Sets = wse.Sets
+                        .Select(s => new
+                        {
+                            s.Weight,
+                            s.Reps
+                        })
+                        .ToList()
+                })
+                .ToListAsync(cancellationToken);
+
+            // We pakken alle history records die we eerder uit de database hebben gehaald.
+            // We groeperen deze records zodat de alle sessions van een bepaalde oefening bij elkaar komen.
+            var result = history
+                .GroupBy(h => new
+                {
+                    h.ExerciseId,
+                    h.ExerciseName
+                })
+                // Voor elke oefening groep maken we een dto aan.
+                .Select(group => new WorkoutExerciseHistoryDto
+                {
+                    ExerciseId = group.Key.ExerciseId,
+                    ExerciseName = group.Key.ExerciseName,
+
+                    // We gaan binnen een bepaalde oefeningen groep alle sessions bekijken.
+                    History = group.Select(session =>
+                        {
+                            // Binnnen de oefening groep gaan we  kijken in de sessions welke session de beste set is.
+                            // Deze slaan we op in bestSet.
+                            var bestSet = session.Sets
+                                .OrderByDescending(s => s.Weight)
+                                .ThenByDescending(s => s.Reps)
+                                .FirstOrDefault();
+
+                            // We controleren of er een bestSet gevonden is niet gevonden is return null.
+                            // Anders als er wel een bestSet gevonden is maken we de Dto aan.
+                            return bestSet is null ? null : new WorkoutExerciseHistoryEntryDto
+                                {
+                                    Date = session.Date,
+                                    Weight = bestSet.Weight,
+                                    Reps = bestSet.Reps
+                                };
+                        })
+                        // Het is mogelijk dat er bij een workout sessions een oefening over geslagen wordt.
+                        // Dan krijg je null terug omdat er geen best set is.
+                        // Dit zorgt ervoor dat de null uit de lijst worden gehaald en alleen bestSets die niet null zijn in de lijst blijven staan.
+                        .Where(entry => entry is not null)
+
+                        // Zegt dat de overige sessions n iet null zijn.
+                        .Select(entry => entry!)
+
+                        // Sorteert de history van oud naar nieuw.
+                        .OrderBy(entry => entry.Date)
+
+                        // Zet alle history entries van deze oefening om in een lijst
+                        .ToList()
+                })
+                // Zet alle oefeningen met hun history om in een lijst
+                .ToList();
+
+            // Geeft de historische prestaties per huidige oefening terug.
+            return result;
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebAPI.Extensions;
 using WebAPI.Services;
 
 namespace WebAPI.Controllers
@@ -43,6 +44,36 @@ namespace WebAPI.Controllers
 
             // Return Ok met de oefening
             return Ok(exercise);
+        }
+
+        // Haalt het persoonlijke record op van een oefening.
+        [HttpGet("exercisepersonalrecord/{exerciseId:int}")]
+        public async Task<IActionResult> GetExercisePersonalRecord(int exerciseId, CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID uit de claims.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Haalt het persoonlijke record van de oefening op voor de ingelogde gebruiker.
+            var personalRecord = await _exercisesService.GetExercisePersonalRecordAsync(exerciseId, userId, cancellationToken);
+
+            // Geeft het persoonlijke record terug naar de frontend.
+            return Ok(personalRecord);
+        }
+
+        // Haalt de laatste uitgevoerde set op van een oefening.
+        [HttpGet("exerciselastperformed/{exerciseId:int}")]
+        public async Task<IActionResult> GetExerciseLastPerformed(int exerciseId, CancellationToken cancellationToken)
+        {
+            // Controleert of de gebruiker is ingelogd en haalt het user ID op.
+            if (!User.TryGetUserId(out var userId))
+                return Unauthorized("Invalid user.");
+
+            // Haalt de laatste uitgevoerde set van de oefening op voor de ingelogde gebruiker.
+            var lastPerformed = await _exercisesService.GetExerciseLastPerformedAsync(exerciseId, userId, cancellationToken);
+
+            // Geeft de laatste uitgevoerde set terug naar de frontend.
+            return Ok(lastPerformed);
         }
     }
 }

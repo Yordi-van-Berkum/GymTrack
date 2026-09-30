@@ -1,0 +1,194 @@
+﻿/* =========================
+   WORKOUT HISTORY
+   ========================= */
+
+.exercise-history {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 24px;
+    margin-bottom: 30px;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+    .exercise-history h3 {
+        margin-bottom: 30px;
+    }
+
+/* =========================
+   GRAPH
+   ========================= */
+
+.graph-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.graph {
+    position: relative;
+    height: 200px;
+    min-width: 100%;
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.graph-bar {
+    position: absolute;
+    bottom: 0;
+    width: 115px;
+    min-height: 1px;
+    background: var(--color-primary);
+    text-align: center;
+}
+
+    .graph-bar:nth-child(1) {
+        left: 30px;
+    }
+
+    .graph-bar:nth-child(2) {
+        left: 150px;
+    }
+
+    .graph-bar:nth-child(3) {
+        left: 270px;
+    }
+
+    .graph-bar:nth-child(4) {
+        left: 390px;
+    }
+
+    .graph-bar:nth-child(5) {
+        left: 510px;
+    }
+
+    .graph-bar:nth-child(6) {
+        left: 630px;
+    }
+
+    .graph-bar:nth-child(7) {
+        left: 750px;
+    }
+
+    .graph-bar:nth-child(8) {
+        left: 870px;
+    }
+
+    .graph-bar:nth-child(9) {
+        left: 990px;
+    }
+
+    .graph-bar:nth-child(10) {
+        left: 1110px;
+    }
+
+    .graph-bar:nth-child(11) {
+        left: 1230px;
+    }
+
+.weight {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    width: 100%;
+    margin-bottom: 5px;
+    color: var(--color-text);
+    font-size: var(--font-size-small);
+    white-space: nowrap;
+    text-align: center;
+}
+
+.graph-dates {
+    display: flex;
+    gap: 70px;
+    min-width: 100%;
+    padding: 5px 30px;
+    box-sizing: border-box;
+}
+
+    .graph-dates span {
+        width: 50px;
+        flex-shrink: 0;
+        color: var(--color-text-muted);
+        font-size: var(--font-size-tiny);
+        text-align: center;
+    }
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 700px) {
+
+    .exercise-history {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+        .exercise-history h3 {
+            margin-bottom: 24px;
+        }
+
+    .graph {
+        min-width: 100%;
+    }
+
+    .graph-bar {
+        width: 40px;
+    }
+
+        .graph-bar:nth-child(1) {
+            left: 20px;
+        }
+
+        .graph-bar:nth-child(2) {
+            left: 80px;
+        }
+
+        .graph-bar:nth-child(3) {
+            left: 140px;
+        }
+
+        .graph-bar:nth-child(4) {
+            left: 200px;
+        }
+
+        .graph-bar:nth-child(5) {
+            left: 260px;
+        }
+
+        .graph-bar:nth-child(6) {
+            left: 320px;
+        }
+
+        .graph-bar:nth-child(7) {
+            left: 380px;
+        }
+
+        .graph-bar:nth-child(8) {
+            left: 440px;
+        }
+
+        .graph-bar:nth-child(9) {
+            left: 500px;
+        }
+
+        .graph-bar:nth-child(10) {
+            left: 560px;
+        }
+
+        .graph-bar:nth-child(11) {
+            left: 620px;
+        }
+
+    .graph-dates {
+        min-width: 0;
+        gap: 20px;
+        padding: 5px 15px;
+    }
+
+        .graph-dates span {
+            width: 40px;
+        }
+}

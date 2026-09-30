@@ -1,14 +1,18 @@
-﻿.create-update-workout-card {
+﻿/* =========================
+   CREATE / UPDATE WORKOUT
+   ========================= */
+
+.create-update-workout-card {
     width: 100%;
     max-width: 650px;
-    margin: 20px auto;
-    background: #020617;
-    border-radius: 16px;
-    padding: 32px;
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     height: fit-content;
+    margin: 20px auto;
+    padding: 32px;
     box-sizing: border-box;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .create-update-workout-form-group {
@@ -19,35 +23,36 @@
 }
 
     .create-update-workout-form-group label {
-        color: #e2e8f0;
-        font-size: 14px;
+        color: var(--color-text);
+        font-size: var(--font-size-small);
         font-weight: 600;
     }
 
 .create-update-workout-form-control {
     width: 100%;
     height: 44px;
-    background: #0f172a;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 10px;
     padding: 0 14px;
-    color: white;
-    font-size: 15px;
-    outline: none;
     box-sizing: border-box;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    color: var(--color-text-white);
+    font-family: inherit;
+    font-size: var(--font-size-small);
+    outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
     .create-update-workout-form-control:hover {
-        border-color: rgba(255,255,255,0.15);
+        border-color: rgba(255, 255, 255, 0.15);
     }
 
     .create-update-workout-form-control:focus {
         outline: none;
-        border-color: rgba(122,123,255,0.5);
-        box-shadow: 0 0 15px rgba(122,123,255,0.25);
-        background: #0f172a;
-        color: #ffffff;
+        background: var(--color-surface);
+        border-color: rgba(122, 123, 255, 0.5);
+        color: var(--color-text-white);
+        box-shadow: 0 0 15px rgba(122, 123, 255, 0.25);
     }
 
 select.create-update-workout-form-control {
@@ -57,18 +62,18 @@ select.create-update-workout-form-control {
 
 .create-update-workout-form-group .validation-message {
     width: 100%;
-    padding: 12px 16px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 12px 16px;
     margin-bottom: 0;
-    border: 1px solid transparent;
+    box-sizing: border-box;
     background: rgba(239, 68, 68, 0.12);
-    border-color: rgba(239, 68, 68, 0.35);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: var(--radius-small);
     color: #fca5a5;
+    font-size: var(--font-size-small);
+    font-weight: 600;
     box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
 }
 
@@ -80,11 +85,12 @@ select.create-update-workout-form-control {
     justify-content: center;
     gap: 8px;
     margin-top: 24px;
-    border-radius: 10px;
-    border: 1px solid rgba(139,152,173,0.25);
-    background: #0f172a;
-    color: #8b98ad;
-    font-size: 15px;
+    background: var(--color-surface);
+    border: 1px solid rgba(139, 152, 173, 0.25);
+    border-radius: var(--radius-small);
+    color: var(--color-text-muted);
+    font-family: inherit;
+    font-size: var(--font-size-small);
     font-weight: 700;
     text-decoration: none;
     cursor: pointer;
@@ -93,13 +99,13 @@ select.create-update-workout-form-control {
 
     .submit-workout-btn:hover {
         transform: translateY(-3px) scale(1.02);
-        border-color: rgba(122,123,255,0.5);
-        color: #ffffff;
-        box-shadow: 0 8px 25px rgba(122,123,255,0.45);
+        border-color: rgba(122, 123, 255, 0.5);
+        color: var(--color-text-white);
+        box-shadow: 0 8px 25px rgba(122, 123, 255, 0.45);
     }
 
     .submit-workout-btn i {
-        color: #7a7bff;
+        color: var(--color-primary);
     }
 
     .submit-workout-btn .update-icon {
@@ -118,7 +124,13 @@ select.create-update-workout-form-control {
         box-shadow: none;
     }
 
-@media(max-width:450px) {
+
+/* =========================
+   MOBILE
+   ========================= */
+
+@media (max-width: 450px) {
+
     .create-update-workout-card {
         padding: 20px;
     }
@@ -129,12 +141,12 @@ select.create-update-workout-form-control {
     }
 
         .create-update-workout-form-group label {
-            font-size: 13px;
+            font-size: var(--font-size-tiny);
         }
 
     .create-update-workout-form-control {
         height: 44px;
-        font-size: 15px;
+        font-size: var(--font-size-small);
     }
 
     .submit-workout-btn {

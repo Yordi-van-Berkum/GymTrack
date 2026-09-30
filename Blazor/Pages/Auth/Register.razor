@@ -22,7 +22,7 @@
                         <label class="auth-label">First Name</label>
                         <InputText class="auth-input" @bind-Value="registerDto.FirstName" />
                         <ValidationMessage class="auth-alert" For="@(() => registerDto.FirstName)" />
-                     </div>
+                    </div>
 
                     <div class="auth-form-group">
                         <label class="auth-label">Last Name</label>
@@ -68,56 +68,44 @@
 
                     <div class="auth-buttons">
                         <button class="auth-btn" disabled="@isLoading">
-                                    @(isLoading ? "Loading..." : "Register")
-                                </button>
+                            @(isLoading ? "Loading..." : "Register")
+                        </button>
                         <a class="auth-btn-cancel" href="/Login">Log In</a>
                     </div>
                 </div>
-             </EditForm>
+            </EditForm>
         </div>
     </div>
 </div>
 
 @code {
-    // Model waarin alle registratiegegevens van de gebruiker worden opgeslagen
     private RegisterDto registerDto = new();
+    private bool isLoading;
 
-    // Injecteren van benodigheden van de pagina
     [Inject] private CustomAuthStateProvider AuthenticationService { get; set; } = default!;
-    [Inject] ToastService ToastService { get; set; } = default!;
+    [Inject] private ToastService ToastService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
-
-    private bool isLoading = false;
-
 
     private async Task RegisterAsync()
     {
-        // Voorkomt dat er meerdere registratieverzoeken tegelijk worden verstuurd.
         if (isLoading)
             return;
 
         try
         {
-            // Zet de loadingstatus aan zodat de gebruiker niet opnieuw kan klikken.
             isLoading = true;
 
-            // Voert de regristratie uit via de authentication service.
             var message = await AuthenticationService.RegisterAsync(registerDto);
 
-            // Geeft een toast message aan de gebruiker wanneer regristratie succesvol is.
             ToastService.ShowToast(message, ToastLevel.Success);
-
-            // Navigeert naar de homepagina.
             Navigation.NavigateTo("/Login");
         }
         catch (Exception ex)
         {
-            // Toont de toast met de ontvangen foutmelding wanneer het regristreren niet gelukt is.
             ToastService.ShowToast(ex.Message, ToastLevel.Error);
         }
         finally
         {
-            // Zet de loadingstatus weer uit.
             isLoading = false;
         }
     }

@@ -23,5 +23,6 @@ namespace WebAPI.Services
         Task CompleteWorkoutSessionAsync(Guid workoutSessionId, Guid userId, CancellationToken cancellationToken = default);
         Task DeleteInactiveWorkoutSessionsAsync(CancellationToken cancellationToken = default);
         Task<bool> WorkoutSessionExistsAsync(Guid workoutSessionId, Guid userId, CancellationToken cancellationToken = default);
+        Task<List<WorkoutExerciseHistoryDto>> GetWorkoutExerciseHistoryAsync(Guid workoutId, Guid userId, CancellationToken cancellationToken = default);
     }
 }

@@ -1,32 +1,36 @@
-﻿
+﻿/* =========================
+   NAVBAR
+   ========================= */
+
 .navbar {
-    background: #020617;
     height: 70px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
     justify-content: space-between;
     align-items: center;
     position: sticky;
     top: 0;
     z-index: 1000;
     padding: 12px 20px;
+    background: var(--color-background);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .navbar-title {
-    color: white;
-    font-size: 24px;
+    color: var(--color-text-white);
+    font-size: var(--font-size-h2);
     font-weight: 700;
 }
 
 
-
+/* =========================
+   NAV LINKS
+   ========================= */
 
 .nav-links {
     display: flex;
     align-items: center;
     gap: 12px;
 }
-
-
 
     .nav-links a,
     .logout-btn {
@@ -35,66 +39,69 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #0f172a;
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 10px;
-        color: #8b98ad;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-small);
+        color: var(--color-text-muted);
+        font-family: inherit;
         font-size: 15px;
         font-weight: 700;
         text-decoration: none;
         cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
     }
-
-
 
         .nav-links a:hover,
         .logout-btn:hover {
             transform: translateY(-3px) scale(1.02);
-            border-color: rgba(122,123,255,0.5);
-            color: white;
-            box-shadow: 0 8px 25px rgba(122,123,255,0.45);
+            background: var(--color-surface-hover);
+            border-color: rgba(122, 123, 255, 0.5);
+            color: var(--color-text-white);
+            box-shadow: 0 8px 25px rgba(122, 123, 255, 0.45);
         }
 
 
-
-
-
-/* HAMBURGER */
+/* =========================
+   HAMBURGER
+   ========================= */
 
 .menu-toggle {
     display: none;
-    height: 42px;
     width: 42px;
-    background: #0f172a;
-    color: white;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 10px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    color: var(--color-text-white);
     font-size: 20px;
     cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
 }
 
+    .menu-toggle:hover {
+        transform: translateY(-2px);
+        background: var(--color-surface-hover);
+        border-color: rgba(122, 123, 255, 0.5);
+        box-shadow: 0 8px 25px rgba(122, 123, 255, 0.35);
+    }
 
 
-/* MOBILE */
+/* =========================
+   MOBILE
+   ========================= */
 
-@media(max-width:700px) {
-
+@media (max-width: 700px) {
 
     .navbar {
         padding: 0 16px;
     }
 
-
     .menu-toggle {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 42px;
-        width: 42px;
     }
-
-
 
     .nav-links {
         display: none;
@@ -103,20 +110,17 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: #020617;
+        z-index: 999;
         padding: 24px 20px;
         flex-direction: column;
+        align-items: stretch;
         gap: 16px;
-        z-index: 999;
+        background: var(--color-background);
     }
-
-
 
         .nav-links.show {
             display: flex;
         }
-
-
 
         .nav-links a,
         .logout-btn {

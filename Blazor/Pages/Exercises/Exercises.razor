@@ -1,6 +1,8 @@
 ﻿@page "/Exercises/{MuscleGroupId:int}/{WorkoutId:guid?}"
+@implements IDisposable
 
 <div class="page-container">
+
     <div class="pagetitle-back">
         <BackButton />
         <div class="pagetitle">Exercises</div>
@@ -25,8 +27,11 @@
             @foreach (var exercise in FilteredExercises)
             {
                 <div class="exercise-card" @onclick="() => ExerciseDetail(exercise.Id)">
-                    <div class="exercise-image-wrapper"> <img src="@($"/Images/Exercises/{exercise.ImageUrl}")" alt="@exercise.Name" class="exercise-image" /> </div>
-                    <div class="exercise-name"> @exercise.Name </div>
+                    <div class="exercise-image-wrapper">
+                        <img src="@($"/Images/Exercises/{exercise.ImageUrl}")" alt="@exercise.Name" class="exercise-image" />
+                    </div>
+
+                    <div class="exercise-name">@exercise.Name</div>
                 </div>
             }
         </div>
@@ -34,54 +39,41 @@
 
 </div>
 
-
-
 @code {
-    // Wanneer er een WorkoutId ontvangen is zijn we op deze pagina gekomen via de workouts pagina.
-    // Mocht er een WorkoutId mee gestuurd zijn dan zitten we in de WorkoutMode.
-    // Mocht er geen WorkoutId mee gestuurd zijn krijgen we gewoon de standaard pagina.
+    // WorkoutId bepaalt of de pagina vanuit een bestaande workout wordt geopend.
     [Parameter] public Guid? WorkoutId { get; set; }
+
     private bool WorkoutMode => WorkoutId.HasValue;
 
-    // Hier wordt er opgeslagen wat je typt in de zoekbalk als string
-    private string searchTerm = "";
+    private string searchTerm = string.Empty;
 
-    // Meegestuurde id vanuit de spiergroepen pagina
-    [Parameter] public int MuscleGroupId { get; set; }
+    [Parameter]
+    public int MuscleGroupId { get; set; }
 
-    // Lijst met oefenignen
     private List<Exercise> exercises = new();
 
-    // Injecteren van benodigheden van de pagina
+    private bool isLoading;
+
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
     [Inject] private ExercisesService ExercisesService { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
 
-    // Wordt gebruikt om lopende requests te annuleren wanneer de pagina wordt verlaten.
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
-
-    // Boolean om pagina in te laden wanneer alles opgehaald is wordt die false en toont die de pagina
-    private bool isLoading;
-
-    // Aanroepen van de LoadAllDataAsync functie bij het inladen van de pagina.
     protected override async Task OnInitializedAsync()
     {
         await LoadAllDataAsync();
     }
 
-    // Zorgt ervoor dat de pagina pas inlaad wanneer alle functie zijn aangeroepen.
     private async Task LoadAllDataAsync()
     {
         try
         {
             isLoading = true;
-
-            await Task.WhenAll(
-                LoadExercisesAsync(_cancellationTokenSource.Token)
-            );
+            await LoadExercisesAsync(_cancellationTokenSource.Token);
         }
         catch (OperationCanceledException)
         {
-            // Request is geannuleerd omdat de pagina is verlaten.
+            // Request is geannuleerd wanneer de pagina wordt verlaten.
         }
         finally
         {
@@ -89,42 +81,32 @@
         }
     }
 
-    // Ophalen van alle oefeningen van een bepaalde spiergroep.
     private async Task LoadExercisesAsync(CancellationToken cancellationToken)
     {
         exercises = await ExercisesService.GetExercisesByMuscleGroupIdAsync(MuscleGroupId, cancellationToken);
     }
 
-
-    // Navigeren naar de detail pagina van de oefening.
     private void ExerciseDetail(int exerciseId)
     {
-        // Als WorkoutMode actief is stuur je het id van de workout mee naar de detail pagina
-        // Vanuit daar kan je oefening toevoegen aan de meegestuurde workout.
+        // In WorkoutMode wordt de WorkoutId meegestuurd naar de detailpagina.
         if (WorkoutMode)
         {
             Navigation.NavigateTo($"/ExerciseDetail/{exerciseId}/{WorkoutId}");
         }
-        // Anders navigeer je gewoon naar de standaard detail pagina.
         else
         {
             Navigation.NavigateTo($"/ExerciseDetail/{exerciseId}");
         }
     }
 
-    // Annuleert lopende requests wanneer de component wordt verwijderd.
     public void Dispose()
     {
         _cancellationTokenSource.Cancel();
         _cancellationTokenSource.Dispose();
     }
 
-    // Filter de lijst met oefeningen.
     private IEnumerable<Exercise> FilteredExercises =>
         exercises.Where(x =>
-            // Als er niks in de zoekbalk is ingevuld stuur alle oefeningen terug.
             string.IsNullOrWhiteSpace(searchTerm) ||
-            // Als de zoekbalk wel is ingevuld filter de oefeningen met wat vergeleken is.
-            x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
-        );
+            x.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
 }

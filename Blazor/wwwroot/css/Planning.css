@@ -1,74 +1,69 @@
-﻿.planning-list {
+﻿/* =========================
+   PLANNING
+   ========================= */
+
+.planning-list {
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-
 .planning-day-card {
     width: 100%;
     min-height: 64px;
-    box-sizing: border-box;
     padding: 10px 14px;
+    box-sizing: border-box;
     display: grid;
     grid-template-columns: 140px 1fr auto;
     align-items: center;
     gap: 20px;
-    background: #020617;
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-
 .planning-day-name {
-    color: white;
-    font-size: 16px;
+    color: var(--color-text-white);
+    font-size: var(--font-size-body);
     font-weight: 700;
 }
 
 .planning-day-today {
-    color: #7a7bff;
-    font-weight: 700;
+    color: var(--color-primary);
 }
 
 .planning-workout {
     min-height: 44px;
+    padding: 10px 14px;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
-    box-sizing: border-box;
-    padding: 10px 14px;
-    background: #0f172a;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 10px;
-    color: #e2e8f0;
-    font-size: 15px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+    color: var(--color-text);
+    font-size: var(--font-size-small);
+    font-weight: 700;
     cursor: pointer;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    font-weight: 700;
 }
-
 
     .planning-workout:hover {
         border-color: rgba(122, 123, 255, 0.5);
         box-shadow: 0 8px 25px rgba(122, 123, 255, 0.35);
     }
 
-
 .planning-workout-empty {
-    color: #94a3b8;
+    color: var(--color-text-muted);
     cursor: default;
-    font-size: 15px;
-    font-weight: 700;
 }
 
-
     .planning-workout-empty:hover {
-        border-color: rgba(255,255,255,0.08);
+        border-color: var(--color-border);
         box-shadow: none;
     }
-
 
 .planning-actions {
     display: flex;
@@ -76,11 +71,13 @@
     justify-content: flex-end;
 }
 
-
     .planning-actions button {
         min-width: 160px;
     }
 
+/* =========================
+   TABLET
+   ========================= */
 
 @media (max-width: 900px) {
 
@@ -90,6 +87,9 @@
     }
 }
 
+/* =========================
+   MOBILE
+   ========================= */
 
 @media (max-width: 600px) {
 
@@ -99,21 +99,17 @@
         padding: 14px;
     }
 
-
     .planning-day-name {
-        font-size: 18px;
+        font-size: var(--font-size-h5);
     }
-
 
     .planning-workout {
         width: 100%;
     }
 
-
     .planning-actions {
         width: 100%;
     }
-
 
         .planning-actions button {
             width: 100%;

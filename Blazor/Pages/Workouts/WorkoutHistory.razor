@@ -1,0 +1,116 @@
+﻿@page "/WorkoutHistory/{WorkoutId:guid}"
+<PageTitle>Workout History</PageTitle>
+
+<div class="page-container">
+
+    <div class="pagetitle-back">
+        <BackButton />
+        <div class="pagetitle">@(myWorkout?.Name ?? "Workout") History</div>
+    </div>
+
+    @if (isLoading)
+    {
+        <p class="status-message">Loading history...</p>
+    }
+    else if (history is null)
+    {
+        <p class="status-message">History not found.</p>
+    }
+    else
+    {
+        @foreach (var exercise in history)
+        {
+            <div class="exercise-history">
+                <h3>@exercise.ExerciseName</h3>
+
+                <div class="graph-container">
+
+                    <div class="graph" style="@($"width: {(exercise.History.Count == 0 ? 0 : 60 + (exercise.History.Count - 1) * 60)}px;")">
+                        @for (var i = 0; i < exercise.History.Count; i++)
+                        {
+                            var entry = exercise.History[i];
+
+                            <div class="graph-bar" style="@($"height: {GetPointHeight(entry)}px;")">
+                                <span class="weight">@entry.Weight.ToString("0.##") kg</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="graph-dates" style="@($"width: {(exercise.History.Count == 0 ? 0 : 60 + (exercise.History.Count - 1) * 60)}px;")">
+                        @foreach (var entry in exercise.History)
+                        {
+                            <span>@entry.Date.ToString("dd MMM yy")</span>
+                        }
+                    </div>
+
+                </div>
+            </div>
+        }
+    }
+
+</div>
+
+@code {
+    [Parameter] public Guid WorkoutId { get; set; }
+
+    private List<WorkoutExerciseHistory> history = new();
+    private Workout? myWorkout;
+    private bool isLoading;
+
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private WorkoutsService WorkoutsService { get; set; } = default!;
+    [Inject] private ToastService ToastService { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllDataAsync();
+    }
+
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            var tasks = new[]
+            {
+                LoadMyWorkoutAsync(_cancellationTokenSource.Token),
+                LoadMyWorkoutHistoryAsync(_cancellationTokenSource.Token)
+            };
+
+            await Task.WhenAll(tasks);
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd wanneer de pagina wordt verlaten.
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadMyWorkoutAsync(CancellationToken cancellationToken)
+    {
+        myWorkout = await WorkoutsService.GetWorkoutByIdAsync(WorkoutId, cancellationToken);
+    }
+
+    private async Task LoadMyWorkoutHistoryAsync(CancellationToken cancellationToken)
+    {
+        history = await WorkoutsService.GetWorkoutExerciseHistoryAsync(WorkoutId, cancellationToken);
+    }
+
+    // Keeps the graph bars visually manageable regardless of the recorded weight.
+    private double GetPointHeight(WorkoutExerciseHistoryEntry entry)
+    {
+        return (double)entry.Weight * 0.7;
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+}
