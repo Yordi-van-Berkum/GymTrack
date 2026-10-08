@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Data.SqlClient;
+using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
 using WebAPI.Exceptions;
@@ -27,6 +28,13 @@ namespace WebAPI.Middleware
             {
                 // De request is geannuleerd, bijvoorbeeld doordat de gebruiker de pagina verlaat.
                 _logger.LogInformation("Request was cancelled by the client. Method: {Method}, Path: {Path}", context.Request.Method, context.Request.Path);
+            }
+            catch (SqlException) when (context.RequestAborted.IsCancellationRequested)
+            {
+                // SQL Server kan bij het annuleren van een actieve databasequery
+                // een SqlException geven in plaats van OperationCanceledException.
+                // Dit is normaal wanneer de client de request heeft geannuleerd.
+                _logger.LogInformation("SQL request was cancelled by the client. Method: {Method}, Path: {Path}", context.Request.Method, context.Request.Path);
             }
             catch (NotFoundException ex)
             {

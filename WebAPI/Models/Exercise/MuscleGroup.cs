@@ -9,6 +9,7 @@
         public string? Description { get; set; }
 
         public string? ImageUrl { get; set; }
+        public int SortOrder { get; set; }
 
         public ICollection<ExerciseMuscleGroup> ExerciseMuscleGroups { get; set; }
     }
