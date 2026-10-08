@@ -38,6 +38,11 @@ namespace Blazor.Services
                 // Geeft de succesvolle response terug aan de aanroeper.
                 return responseBody;
             }
+            catch (OperationCanceledException)
+            {
+                // Normale cancellation wanneer de gebruiker de pagina verlaat.
+                throw;
+            }
             catch (HttpRequestException ex)
             {
                 // Wordt uitgevoerd wanneer de API niet bereikbaar is.
@@ -81,6 +86,11 @@ namespace Blazor.Services
 
                 // Zet de JSON-response om naar het gewenste C#-model.
                 return (await response.Content.ReadFromJsonAsync<TResponse>())!;
+            }
+            catch (OperationCanceledException)
+            {
+                // Normale cancellation wanneer de gebruiker de pagina verlaat.
+                throw;
             }
             catch (HttpRequestException ex)
             {

@@ -15,17 +15,18 @@ namespace WebAPI.Services
         // Haalt alle spiergroepen op uit de database en sorteerd deze op naam.
         public async Task<List<MuscleGroupDto>> GetMuscleGroupsAsync(CancellationToken cancellationToken = default)
         {
-            return await _context.MuscleGroups.AsNoTracking()
-                .Select(mg => new MuscleGroupDto
-                {
-                    Id = mg.Id,
-                    Name = mg.Name,
-                    Description = mg.Description,
-                    ImageUrl = mg.ImageUrl,
-                    ExerciseCount = mg.ExerciseMuscleGroups.Count()
-                })
-                .OrderBy(mg => mg.Name)
-                .ToListAsync(cancellationToken);
+            return await _context.MuscleGroups
+              .AsNoTracking()
+              .OrderBy(mg => mg.SortOrder)
+              .Select(mg => new MuscleGroupDto
+              {
+                  Id = mg.Id,
+                  Name = mg.Name,
+                  Description = mg.Description,
+                  ImageUrl = mg.ImageUrl,
+                  ExerciseCount = mg.ExerciseMuscleGroups.Count()
+              })
+              .ToListAsync(cancellationToken);
         }
 
         // Haalt alle oefeningen op uit de database van een spiergroep en sorteerd deze op naam.
@@ -40,7 +41,7 @@ namespace WebAPI.Services
                     Name = e.Name,
                     ImageUrl = e.ImageUrl
                 })
-                .OrderBy(e => e.Name)
+                .OrderBy(mg => mg.Name)
                 .ToListAsync(cancellationToken);
         }
 

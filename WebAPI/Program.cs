@@ -113,6 +113,13 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+// Initialiseert de database en voegt standaarddata toe.
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await DbInitializer.InitializeAsync(dbContext);
+}
+
 
 // Vangt onverwachte exceptions centraal af voor alle requests.
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
@@ -143,6 +150,7 @@ if (app.Environment.IsDevelopment())
 // Zorgt ervoor dat HTTPS gebruikt wordt.
 app.UseHttpsRedirection();
 
+app.UseStaticFiles();
 
 // Controleert eerst of een gebruiker een geldige JWT token heeft.
 app.UseAuthentication();
