@@ -5,6 +5,7 @@ namespace WebAPI.Services
 {
     public interface IAccountService
     {
-        Task<UserProfile?> GetMyProfileAsync(ClaimsPrincipal user);
+        Task<UserProfile?> GetMyProfileAsync(Guid userId, CancellationToken cancellationToken = default);
+        Task UpdateMyProfileAsync(Guid userId, UserProfileDto userProfileDto, CancellationToken cancellationToken = default);
     }
 }
