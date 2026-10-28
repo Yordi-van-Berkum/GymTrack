@@ -1,4 +1,5 @@
 ﻿using Blazor.Models.Acccount;
+using System.Net.Http.Json;
 
 namespace Blazor.Services
 {
@@ -19,6 +20,13 @@ namespace Blazor.Services
         {
             // SafeDataApiCallAsync voert de HTTP-aanroep veilig uit. Deze functie staat in de SafeApiHelper.cs in de Services map.
             return await _safeApiHelper.SafeDataApiCallAsync<UserProfile>(() => _httpClient.GetAsync("api/account/getmyprofile", cancellationToken));
+        }
+
+        // Werkt het profiel bij van de ingelogde gebruiker.
+        public async Task<string> UpdateMyProfileAsync(UserProfileDto userProfile, CancellationToken cancellationToken = default)
+        {
+            // SafeActionApiCallAsync voert de HTTP-aanroep veilig uit.
+            return await _safeApiHelper.SafeActionApiCallAsync(() => _httpClient.PutAsJsonAsync("api/account/updatemyprofile", userProfile, cancellationToken));
         }
     }
 }

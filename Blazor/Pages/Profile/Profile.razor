@@ -1,0 +1,158 @@
+﻿@page "/Profile"
+@attribute [Authorize]
+@implements IDisposable
+
+<div class="page-container">
+
+    <div class="pagetitle-back">
+        <BackButton />
+        <div class="pagetitle">My Profile</div>
+
+        <button class="mobile-menu-button" @onclick="ToggleMobileActions">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+
+        <div class="action-buttons @(showMobileActions ? "mobile-actions-open" : "")">
+            <button class="button-pageheader update-button" @onclick="NavigateToUpdateProfile">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span>Update Profile</span>
+            </button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <p class="status-message">Loading profile...</p>
+    }
+    else if (profile is null)
+    {
+        <p class="status-message">Profile not found.</p>
+    }
+    else
+    {
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+
+                <div class="profile-header-info">
+                    <h2 class="profile-name"> @profile.FirstName @profile.LastName </h2>
+                    <span class="profile-username"> @profile.UserName </span>
+                </div>
+            </div>
+
+            <div class="profile-divider"></div>
+
+            <div class="profile-section">
+                <div class="profile-section-title">
+                    <i class="fa-solid fa-user"></i>
+                    Personal Information
+                </div>
+
+                <div class="profile-info-grid">
+
+                    <div class="profile-info-item">
+                        <span class="profile-info-label">Name</span>
+                        <span class="profile-info-value">@profile.FirstName @profile.LastName</span>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <span class="profile-info-label">Username</span>
+                        <span class="profile-info-value">@profile.UserName</span>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <span class="profile-info-label">Email</span>
+                        <span class="profile-info-value">@profile.Email</span>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <span class="profile-info-label">Date of Birth</span>
+                        <span class="profile-info-value">
+                            @(profile.DateOfBirth?.ToString("dd/MM/yyyy") ?? "Not provided")
+                        </span>
+                    </div>
+
+                    <div class="profile-info-item">
+                        <span class="profile-info-label">Weight</span>
+                        <span class="profile-info-value">
+                            @(profile.Weight?.ToString("0.##") ?? "Not provided")@(profile.Weight.HasValue ? " kg" : "")
+                        </span> 
+                    </div>
+
+                    <div class="profile-info-item">
+                        <span class="profile-info-label">Height</span>
+                        <span class="profile-info-value">
+                            @(profile.Height?.ToString() ?? "Not provided")@(profile.Height.HasValue ? " cm" : "")
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+     
+    }
+
+</div>
+
+@code {
+    [Inject] private AccountService AccountService { get; set; } = default!;
+    [Inject] private ToastService ToastService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    private UserProfile? profile;
+    private bool isLoading = true;
+    private bool showMobileActions;
+
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private CancellationToken cancellationToken => _cancellationTokenSource.Token;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllDataAsync();
+    }
+
+    private async Task LoadAllDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+            await LoadMyProfileAsync();
+        }
+        catch (OperationCanceledException)
+        {
+            // Request is geannuleerd wanneer de pagina wordt verlaten.
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowToast(ex.Message, ToastLevel.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadMyProfileAsync()
+    {
+        profile = await AccountService.GetMyProfileAsync(cancellationToken);
+    }
+
+    private void NavigateToUpdateProfile()
+    {
+        Navigation.NavigateTo($"/UpdateProfile");
+    }
+
+    private void ToggleMobileActions()
+    {
+        showMobileActions = !showMobileActions;
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+}
