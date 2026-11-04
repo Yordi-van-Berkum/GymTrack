@@ -26,9 +26,21 @@
             @foreach (var workout in FilteredMyWorkouts)
             {
                 <div class="workout-card" @onclick="() => OpenConfirmAddWorkoutToPlanningPopup(workout)">
-                    <div class="workout-icon-wrapper"><i class="@GetWorkoutIcon(workout.Type) workout-icon"></i></div>
-                    <div class="workout-name">@workout.Name</div>
-                    <div class="workout-count"><span>@workout.ExerciseCount</span> exercises</div>
+
+                    <div class="workout-image">
+                        <img src="@GetWorkoutImage(workout.Id)" alt="@workout.Name" />
+                    </div>
+
+                    <div class="workout-info">
+                        <div class="workout-name">
+                            @workout.Name
+                        </div>
+
+                        <div class="workout-count">
+                            <span>@workout.ExerciseCount</span> exercises
+                        </div>
+                    </div>
+
                 </div>
             }
         </div>
@@ -168,6 +180,24 @@
         {
             Navigation.NavigateTo("/Planning");
         }
+    }
+
+    private string GetWorkoutImage(Guid workoutId)
+    {
+        string[] images =
+        {
+        "/images/Dashboard/dashboardheader.png",
+        "/images/Dashboard/workoutimage1.png",
+        "/images/Dashboard/workoutimage2.png",
+        "/images/Dashboard/workoutimage3.png"
+    };
+
+        int workoutIndex = myWorkouts.FindIndex(x => x.Id == workoutId);
+
+        if (workoutIndex < 0)
+            workoutIndex = 0;
+
+        return images[workoutIndex % images.Length];
     }
 
     public void Dispose()
