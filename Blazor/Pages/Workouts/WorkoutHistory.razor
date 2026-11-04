@@ -30,7 +30,8 @@
                         {
                             var entry = exercise.History[i];
 
-                            <div class="graph-bar" style="@($"height: {GetPointHeight(entry)}px;")">
+                            <div class="graph-bar"
+                                 style="height: @(GetPointHeight(entry).ToString(System.Globalization.CultureInfo.InvariantCulture))px !important;">
                                 <span class="weight">@entry.Weight.ToString("0.##") kg</span>
                             </div>
                         }
